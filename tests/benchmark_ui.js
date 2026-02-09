@@ -76,9 +76,20 @@ const mockWindow = {
     }
 };
 
-// Mock RNG
-const mockRng = {
-    refill: () => {},
+// Mock RNG (Crypto)
+const mockCrypto = {
+    getRandomValues: (array) => {
+        // Fill with random bytes efficiently for benchmark
+        for (let i = 0; i < array.length; i++) {
+            array[i] = Math.floor(Math.random() * 256);
+        }
+        return array;
+    }
+};
+
+const mockWindowWithCrypto = {
+    ...mockWindow,
+    crypto: mockCrypto
 };
 
 // --- Execution Helper ---
@@ -101,13 +112,13 @@ function runBenchmark() {
 
     // We need to inject our mocks.
     const context = {
-        window: mockWindow,
+        window: mockWindowWithCrypto,
         document: mockDocument,
         console: console,
         requestAnimationFrame: mockWindow.requestAnimationFrame,
         cancelAnimationFrame: mockWindow.cancelAnimationFrame,
         performance: mockWindow.performance,
-        rng: mockRng,
+        // rng: mockRng, // Script now defines its own rng using SecureBatchRNG
         // Global constructors used in script
         Math: Math,
         setTimeout: setTimeout,
