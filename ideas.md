@@ -56,8 +56,7 @@ Códigos de color según la banca del jugador:
 
 ## 4. Stack Tecnológico
 - **Core**: Vanilla JS (Sin frameworks).
-- **Build Tool**: Vite + `vite-plugin-singlefile` (Para generar un único HTML portable).
-- **Billar**: CSS Dark Mode (Fondo #111).
+- Una SPA con CSS, HTML y JS en un unico archivo llamado index.html
 
 ## 5. Optimizaciones
 - **Frecuencia de Actualización**: Para acelerar la simulación y evitar parpadeos molestos, el bucle principal ejecuta **1000 partidas (matches)** en memoria antes de actualizar el gráfico y el contador una sola vez. Esto permite simular millones de partidas en cuestión de minutos.
@@ -74,17 +73,6 @@ Códigos de color según la banca del jugador:
   - **Footer**: Contador de partidas + Tabla de estadísticas (debajo del canvas).
 - **Estética**: Estilo "App Nativa". Botones minimalistas.
 
-## 8. Fase E: Mejoras Propuestas (Roadmap)
 
-### Visual & Diseño (Frontend Design)
-- **Glassmorphism UI**: Aplicar fondos semitransparentes con `backdrop-filter: blur()` en el Header y Footer para un look más moderno y premium.
-- **Tipografía Refinada**: Cambiar a una fuente más geométrica o "tech" (ej. 'Inter' con pesos variados o 'JetBrains Mono' para números) para reforzar el tema de simulación.
-- **Efectos Neón**: Añadir un sutil resplandor (`box-shadow`) a las celdas de los "millonarios" (Verde Neón) para que destaquen visualmente en la grilla oscura.
-- **Transiciones Suaves**: Animar la aparición/desaparición del panel de estadísticas y los cambios de color de las celdas (aunque esto último con cuidado por rendimiento).
 
-### Funcionalidad
-- **Control de Velocidad**: Un slider (`input range`) para ajustar `matchesPerFrame` (de 1 a 1000) en tiempo real.
-- **Gráfico de Distribución**: Un pequeño histograma o gráfico de barras (usando el mismo canvas o uno secundario) que muestre la distribución de riqueza (Curva de Bell vs "Winner takes all").
-- **Agente Destacado (Watchlist)**: Capacidad de hacer clic en un agente y "seguirlo", mostrando su balance en un panel fijo aparte.
-- **Exportar Datos**: Un botón para descargar un CSV con el estado final de todos los agentes (ID, Balance, Match de Bancarrota).
 
