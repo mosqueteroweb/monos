@@ -1,456 +1,549 @@
 <!doctype html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>Battle Royale: Cara o Cruz</title>
     <style>
-      :root {
-        --bg-color: #121212;
-        --text-color: #e0e0e0;
-        --primary-color: #bb86fc;
-        --secondary-color: #03dac6;
-        --canvas-bg: #1e1e1e;
-        --danger-color: #cf6679;
-        --success-color: #4caf50;
-        --neon-color: #00ff00;
-      }
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent-color: #bb86fc;
+            --success-color: #00e676; /* Neon Green */
+            --warning-color: #ffea00;
+            --danger-color: #ff1744;
+            --ruined-color: #37474f; /* Dark Grey */
+        }
 
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        overflow: hidden;
-      }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-      header {
-        padding: 10px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #1f1f1f;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        z-index: 10;
-      }
+        /* HEADER */
+        header {
+            background-color: var(--surface-color);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            z-index: 100;
+            flex-shrink: 0;
+        }
 
-      h1 {
-        font-size: 1.2rem;
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .controls {
-        display: flex;
-        gap: 10px;
-      }
-
-      button {
-        background-color: var(--primary-color);
-        color: #000;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background-color 0.2s;
-      }
-
-      button:hover {
-        background-color: #9965f4;
-      }
-
-      button.secondary {
-        background-color: var(--secondary-color);
-      }
-
-      button.secondary:hover {
-        background-color: #018786;
-      }
-
-      main {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: relative;
-        padding: 10px;
-        overflow: hidden;
-      }
-
-      #gameCanvas {
-        background-color: var(--canvas-bg);
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        cursor: crosshair;
-        max-width: 100%;
-        max-height: 100%;
-      }
-
-      footer {
-        padding: 10px 20px;
-        background-color: #1f1f1f;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        font-size: 0.9rem;
-        max-height: 30vh; /* Limit footer height */
-      }
-
-      .status-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .match-counter {
-        font-weight: bold;
-        font-size: 1.1rem;
-      }
-
-      #statsToggle {
-        background: none;
-        border: 1px solid var(--text-color);
-        color: var(--text-color);
-        padding: 4px 8px;
-        font-size: 0.8rem;
-      }
-
-      #statsContainer {
-        display: none; /* Hidden by default */
-        flex-wrap: wrap;
-        gap: 10px;
-        overflow-y: auto;
-        border-top: 1px solid #333;
-        padding-top: 10px;
-      }
-
-      #statsContainer.visible {
-        display: flex;
-      }
-
-      .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.85rem;
-        min-width: 120px;
-      }
-
-      .color-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-      }
-
-      /* Tooltip */
-      #tooltip {
-        position: absolute;
-        background-color: rgba(0, 0, 0, 0.9);
-        color: #fff;
-        padding: 5px 10px;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        pointer-events: none;
-        display: none;
-        z-index: 100;
-        border: 1px solid #555;
-      }
-
-      /* Responsive adjustments */
-      @media (max-width: 600px) {
         h1 {
-          font-size: 1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* SLIDER */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            width: 100px;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: var(--text-primary);
+            cursor: pointer;
+            margin-top: -5px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444;
+            border-radius: 2px;
+        }
+
+        /* BUTTONS */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
         button {
-          padding: 6px 12px;
-          font-size: 0.8rem;
+            background: #2c2c2c;
+            border: 1px solid #444;
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 36px;
+            height: 36px;
         }
+
+        button:hover {
+            background: #3d3d3d;
+            border-color: #666;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        button.active {
+             background: var(--accent-color);
+             color: #000;
+             border-color: var(--accent-color);
+        }
+
+        /* MAIN CONTENT */
+        main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #gameCanvas {
+            flex: 1;
+            width: 100%;
+            display: block;
+            background-color: #000;
+        }
+
+        /* STATS PANEL (Bottom) */
+        #statsPanel {
+            background-color: var(--surface-color);
+            border-top: 1px solid #333;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            /* Scrollable if content overflows on small screens */
+            overflow-y: auto;
+            max-height: 40vh;
+            flex-shrink: 0;
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+
+        .match-counter {
+            font-size: 1.2rem;
+            color: var(--success-color);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        /* PROGRESS BAR */
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background-color: #333;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .progress-bar {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .pb-ruined { background-color: var(--ruined-color); }
+        .pb-losing { background-color: var(--danger-color); }
+        .pb-neutral { background-color: var(--warning-color); }
+        .pb-winning { background-color: var(--success-color); }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
         .stat-item {
-          width: 48%; /* 2 columns on mobile */
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
         }
-      }
+
+        .stat-value {
+            color: var(--text-primary);
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* TOOLTIP */
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            h1 { font-size: 0.9rem; }
+            .slider-container { width: 70px; }
+            button { width: 32px; height: 32px; }
+            #statsPanel { padding: 10px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
     </style>
-  </head>
-  <body>
-    <header>
-      <h1>Battle Royale: Cara o Cruz</h1>
-      <div class="controls">
-        <button id="startPauseBtn">Iniciar</button>
-        <button id="resetBtn" class="secondary">Reset</button>
-      </div>
-    </header>
+</head>
+<body>
 
-    <main>
-      <canvas id="gameCanvas"></canvas>
-      <div id="tooltip"></div>
-    </main>
-
-    <footer>
-      <div class="status-bar">
-        <span class="match-counter"
-          >Partidas: <span id="matchCount">0</span></span
-        >
-        <button id="statsToggle">Mostrar Estadísticas</button>
-      </div>
-      <div id="statsContainer">
-        <!-- Stats Categories as requested -->
-        <div class="stat-item">
-          Arruinados (<= 0): <span id="stat-ruined">0</span>
+<header>
+    <h1>BATTLE ROYALE</h1>
+    <div class="controls">
+        <div class="slider-container" title="Velocidad de Simulación">
+            <input type="range" id="speedSlider" min="100" max="10000" step="100" value="1000">
         </div>
-        <div class="stat-item">
-          Perdiendo (< 1000): <span id="stat-losing">0</span>
+        <div class="btn-group">
+            <button id="playPauseBtn" title="Iniciar/Pausar">
+                <!-- Play Icon -->
+                <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <!-- Pause Icon (hidden by default) -->
+                <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <button id="resetBtn" title="Reiniciar">
+                <!-- Reset Icon -->
+                <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+            </button>
+            <button id="statsBtn" title="Ver Estadísticas">
+                <!-- Stats Icon -->
+                <svg viewBox="0 0 24 24"><path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/></svg>
+            </button>
         </div>
-        <div class="stat-item">
-          Ganando (> 1000): <span id="stat-winning">0</span>
-        </div>
-        <div class="stat-item">x2 (>= 2000): <span id="stat-x2">0</span></div>
-        <div class="stat-item">x3 (>= 3000): <span id="stat-x3">0</span></div>
-        <div class="stat-item">x5 (>= 5000): <span id="stat-x5">0</span></div>
-        <div class="stat-item">
-          x10 (>= 10000): <span id="stat-x10">0</span>
-        </div>
-      </div>
-    </footer>
+    </div>
+</header>
 
-    <script>
-      // Constants
-      const INITIAL_BANK = 1000;
-      const BET_AMOUNT = 1;
-      const PLAYER_COUNT = 1000;
-      const BATCH_SIZE = 1000;
+<main>
+    <canvas id="gameCanvas"></canvas>
+    <div id="tooltip"></div>
+</main>
 
-      const BANK_COLORS = {
-        BLACK: "#000000",
-        RED: "#f44336",
-        ORANGE: "#ff9800",
-        YELLOW: "#ffeb3b",
-        BLUE: "#2196f3",
-        GREEN: "#4caf50",
-        NEON_GREEN: "#00ff00",
-      };
+<div id="statsPanel">
+    <div class="stats-header">
+        <span class="match-counter">Matches: <span id="matchCount">0</span></span>
+    </div>
 
-      // State
-      let players = [];
-      let matchCount = 0;
-      let isPlaying = false;
-      let animationId;
-      let lastUITime = 0;
+    <div class="progress-container">
+        <div id="pb-ruined" class="progress-bar pb-ruined" style="width: 0%"></div>
+        <div id="pb-losing" class="progress-bar pb-losing" style="width: 0%"></div>
+        <div id="pb-neutral" class="progress-bar pb-neutral" style="width: 100%"></div>
+        <div id="pb-winning" class="progress-bar pb-winning" style="width: 0%"></div>
+    </div>
 
-      // DOM Elements
-      const canvas = document.getElementById("gameCanvas");
-      const ctx = canvas.getContext("2d");
-      const startPauseBtn = document.getElementById("startPauseBtn");
-      const resetBtn = document.getElementById("resetBtn");
-      const matchCountEl = document.getElementById("matchCount");
-      const statsToggleBtn = document.getElementById("statsToggle");
-      const statsContainer = document.getElementById("statsContainer");
-      const tooltip = document.getElementById("tooltip");
+    <div class="stats-grid">
+        <div class="stat-item"><span class="dot" style="background:#37474f"></span>Arruinados (0€)<span class="stat-value" id="stat-ruined">0</span></div>
+        <div class="stat-item"><span class="dot" style="background:#ff9800"></span>Perdiendo (<900)<span class="stat-value" id="stat-losing">0</span></div>
+        <div class="stat-item"><span class="dot" style="background:#ffeb3b"></span>Neutro (900-1100)<span class="stat-value" id="stat-neutral">0</span></div>
+        <div class="stat-item"><span class="dot" style="background:#4caf50"></span>Ganando (>1100)<span class="stat-value" id="stat-winning">0</span></div>
+        <div class="stat-item"><span class="dot" style="background:#00e676"></span>x2 (>2k)<span class="stat-value" id="stat-x2">0</span></div>
+        <div class="stat-item"><span class="dot" style="background:#2196f3"></span>x3 (>3k)<span class="stat-value" id="stat-x3">0</span></div>
+        <div class="stat-item"><span class="dot" style="background:#f44336"></span>x5 (>5k)<span class="stat-value" id="stat-x5">0</span></div>
+        <div class="stat-item"><span class="dot" style="background:#e91e63"></span>x10 (>10k)<span class="stat-value" id="stat-x10">0</span></div>
+    </div>
+</div>
 
-      // Stats Elements
-      const statEls = {
-        ruined: document.getElementById("stat-ruined"),
-        losing: document.getElementById("stat-losing"), // < 1000
-        winning: document.getElementById("stat-winning"), // > 1000
-        x2: document.getElementById("stat-x2"),
-        x3: document.getElementById("stat-x3"),
-        x5: document.getElementById("stat-x5"),
-        x10: document.getElementById("stat-x10"),
-      };
+<script>
+    // Constants
+    const INITIAL_BANK = 1000;
+    const BET_AMOUNT = 1;
+    const PLAYER_COUNT = 1000;
 
-      class SecureBatchRNG {
+    // Configurable via slider
+    let simulationSpeed = 1000;
+
+    const BANK_COLORS = {
+        BLACK: '#000000', // Ruined
+        ORANGE: '#ff9800', // Losing (<900)
+        YELLOW: '#ffeb3b', // Neutral (901-1099)
+        GREEN_NORMAL: '#4caf50', // Winning (>1100)
+        GREEN_HIGHLIGHT: '#00e676', // x2
+        BLUE: '#2196f3', // x3
+        RED: '#f44336', // x5
+        FUCHSIA: '#e91e63' // x10
+    };
+
+    // State
+    let players = [];
+    let matchCount = 0;
+    let isPlaying = false;
+    let animationId;
+    let lastUITime = 0;
+
+    // DOM Elements
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statsBtn = document.getElementById('statsBtn');
+    const speedSlider = document.getElementById('speedSlider');
+    const matchCountEl = document.getElementById('matchCount');
+    const tooltip = document.getElementById('tooltip');
+
+    // Icons
+    const iconPlay = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+
+    // Stats Elements
+    const statEls = {
+        ruined: document.getElementById('stat-ruined'),
+        losing: document.getElementById('stat-losing'),
+        neutral: document.getElementById('stat-neutral'),
+        winning: document.getElementById('stat-winning'),
+        x2: document.getElementById('stat-x2'),
+        x3: document.getElementById('stat-x3'),
+        x5: document.getElementById('stat-x5'),
+        x10: document.getElementById('stat-x10')
+    };
+
+    // Progress Bars
+    const pbEls = {
+        ruined: document.getElementById('pb-ruined'),
+        losing: document.getElementById('pb-losing'),
+        neutral: document.getElementById('pb-neutral'),
+        winning: document.getElementById('pb-winning')
+    };
+
+    class SecureBatchRNG {
         constructor() {
-          // Buffer size calculation:
-          // We need (1 + PLAYER_COUNT) bits per batch iteration.
-          // BATCH_SIZE iterations per frame.
-          // Total bits: BATCH_SIZE * (1 + PLAYER_COUNT) = 1000 * 1001 = 1,001,000 bits.
-          // In bytes: ~125KB. We use 128KB (131072 bytes) as a safe buffer.
-          this.BUFFER_SIZE = 128 * 1024;
-          this.buffer = new Uint8Array(this.BUFFER_SIZE);
-          this.bitIndex = 0;
+            this.BUFFER_SIZE = 128 * 1024;
+            this.buffer = new Uint8Array(this.BUFFER_SIZE);
+            this.bitIndex = 0;
         }
 
         refill() {
-          // crypto.getRandomValues has a quota of 65536 bytes
-          const CHUNK_SIZE = 65536;
-          for (
-            let offset = 0;
-            offset < this.BUFFER_SIZE;
-            offset += CHUNK_SIZE
-          ) {
-            const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
-            const view = this.buffer.subarray(offset, end);
-            window.crypto.getRandomValues(view);
-          }
-          this.bitIndex = 0;
+            const CHUNK_SIZE = 65536;
+            for (let offset = 0; offset < this.BUFFER_SIZE; offset += CHUNK_SIZE) {
+                const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
+                const view = this.buffer.subarray(offset, end);
+                window.crypto.getRandomValues(view);
+            }
+            this.bitIndex = 0;
         }
 
         getBit() {
-          // Safety check: if we run out of bits, refill automatically.
-          // Ideally, the game loop calls refill() explicitly to keep this hot path fast.
-          if (this.bitIndex >= this.BUFFER_SIZE * 8) {
-            this.refill();
-          }
-
-          const byteIndex = this.bitIndex >> 3;
-          const bitOffset = this.bitIndex & 7;
-          // Extract bit: (byte >> offset) & 1
-          const bit = (this.buffer[byteIndex] >> bitOffset) & 1;
-          this.bitIndex++;
-          return bit;
+            if (this.bitIndex >= this.BUFFER_SIZE * 8) {
+                this.refill();
+            }
+            const byteIndex = this.bitIndex >> 3;
+            const bitOffset = this.bitIndex & 7;
+            const bit = (this.buffer[byteIndex] >> bitOffset) & 1;
+            this.bitIndex++;
+            return bit;
         }
-      }
+    }
 
-      const rng = new SecureBatchRNG();
+    const rng = new SecureBatchRNG();
 
-      class Player {
+    class Player {
         constructor(id) {
-          this.id = id;
-          this.bank = INITIAL_BANK;
-          this.active = true;
-          this.maxBank = INITIAL_BANK;
-          this.ruinedAt = null;
+            this.id = id;
+            this.bank = INITIAL_BANK;
+            this.active = true;
+            this.maxBank = INITIAL_BANK;
+            this.ruinedAt = null;
         }
 
         play(coinSide) {
-          if (!this.active) return;
+            if (!this.active) return;
 
-          // Phase D: Random choice per player
-          // 0 = Heads, 1 = Tails
-          const choice = rng.getBit();
+            const choice = rng.getBit();
 
-          if (choice === coinSide) {
-            this.bank += BET_AMOUNT;
-            if (this.bank > this.maxBank) this.maxBank = this.bank;
-          } else {
-            this.bank -= BET_AMOUNT;
-            if (this.bank <= 0) {
-              this.bank = 0;
-              this.active = false;
-              this.ruinedAt = matchCount;
+            if (choice === coinSide) {
+                this.bank += BET_AMOUNT;
+                if (this.bank > this.maxBank) this.maxBank = this.bank;
+            } else {
+                this.bank -= BET_AMOUNT;
+                if (this.bank <= 0) {
+                    this.bank = 0;
+                    this.active = false;
+                    this.ruinedAt = matchCount;
+                }
             }
-          }
         }
-      }
+    }
 
-      function initGame() {
+    function initGame() {
         players = [];
         matchCount = 0;
-        rng.refill(); // Initial fill of random buffer
+        rng.refill();
         for (let i = 0; i < PLAYER_COUNT; i++) {
-          players.push(new Player(i));
+            players.push(new Player(i));
         }
         updateUI();
-        resizeCanvas(); // Will trigger draw
-      }
+        resizeCanvas();
+    }
 
-      function toggleGame() {
+    function toggleGame() {
         isPlaying = !isPlaying;
-        startPauseBtn.textContent = isPlaying ? "Pausa" : "Reanudar";
         if (isPlaying) {
-          animationId = requestAnimationFrame(gameLoop);
+            iconPlay.style.display = 'none';
+            iconPause.style.display = 'block';
+            playPauseBtn.classList.add('active');
+            animationId = requestAnimationFrame(gameLoop);
         } else {
-          cancelAnimationFrame(animationId);
+            iconPlay.style.display = 'block';
+            iconPause.style.display = 'none';
+            playPauseBtn.classList.remove('active');
+            cancelAnimationFrame(animationId);
         }
-      }
+    }
 
-      function resetGame() {
+    function resetGame() {
         isPlaying = false;
         cancelAnimationFrame(animationId);
-        startPauseBtn.textContent = "Iniciar";
+        iconPlay.style.display = 'block';
+        iconPause.style.display = 'none';
+        playPauseBtn.classList.remove('active');
         initGame();
-      }
+    }
 
-      function gameLoop(timestamp) {
+    function gameLoop(timestamp) {
         if (!isPlaying) return;
-
-        // Handle initial call or resumed call where timestamp might be missing or out of sync
         if (!timestamp) timestamp = performance.now();
 
-        // Ensure we have enough random bits for this batch
-        // We need 1 for global coin + 1 for each player = 1 + PLAYER_COUNT per round
-        // Total per batch: BATCH_SIZE * (1 + PLAYER_COUNT)
-        // Our SecureRandom buffer is sized for this exact amount (plus a bit margin if needed)
         rng.refill();
 
-        // Batch processing
-        for (let i = 0; i < BATCH_SIZE; i++) {
-          matchCount++;
-          const coinSide = rng.getBit(); // Global coin flip
+        // Use dynamic speed from slider
+        const currentSpeed = simulationSpeed;
 
-          for (let j = 0; j < PLAYER_COUNT; j++) {
-            players[j].play(coinSide);
-          }
+        for (let i = 0; i < currentSpeed; i++) {
+            matchCount++;
+            const coinSide = rng.getBit();
+            for (let j = 0; j < PLAYER_COUNT; j++) {
+                players[j].play(coinSide);
+            }
         }
 
-        // Throttle UI updates to ~15fps (approx every 66ms)
         if (timestamp - lastUITime > 66) {
-          updateUI();
-          lastUITime = timestamp;
+            updateUI();
+            lastUITime = timestamp;
         }
 
         draw();
-
         animationId = requestAnimationFrame(gameLoop);
-      }
+    }
 
-      function updateUI() {
+    function updateUI() {
         matchCountEl.textContent = matchCount.toLocaleString();
 
-        // Calculate Stats
         let stats = {
-          ruined: 0,
-          losing: 0,
-          winning: 0,
-          x2: 0,
-          x3: 0,
-          x5: 0,
-          x10: 0,
+            ruined: 0,
+            losing: 0, // < 900
+            neutral: 0, // 900-1100
+            winning: 0, // > 1100
+            x2: 0,
+            x3: 0,
+            x5: 0,
+            x10: 0
         };
 
         for (const p of players) {
-          if (p.bank <= 0) stats.ruined++;
-          else if (p.bank < 1000) stats.losing++;
-          else if (p.bank > 1000) stats.winning++;
+            if (p.bank <= 0) stats.ruined++;
+            else if (p.bank <= 900) stats.losing++;
+            else if (p.bank <= 1099) stats.neutral++;
+            else stats.winning++;
 
-          if (p.bank >= 2000) stats.x2++;
-          if (p.bank >= 3000) stats.x3++;
-          if (p.bank >= 5000) stats.x5++;
-          if (p.bank >= 10000) stats.x10++;
+            // Accumulative stats for highlighting
+            if (p.bank >= 2000) stats.x2++;
+            if (p.bank >= 3000) stats.x3++;
+            if (p.bank >= 5000) stats.x5++;
+            if (p.bank >= 10000) stats.x10++;
         }
 
-        // Update DOM
         statEls.ruined.textContent = stats.ruined;
         statEls.losing.textContent = stats.losing;
+        statEls.neutral.textContent = stats.neutral;
         statEls.winning.textContent = stats.winning;
         statEls.x2.textContent = stats.x2;
         statEls.x3.textContent = stats.x3;
         statEls.x5.textContent = stats.x5;
         statEls.x10.textContent = stats.x10;
-      }
 
-      const COLS = 40;
-      const ROWS = 25; // 40 * 25 = 1000
+        // Update Progress Bars
+        const total = PLAYER_COUNT;
+        const pctRuined = (stats.ruined / total) * 100;
+        const pctLosing = (stats.losing / total) * 100;
+        const pctNeutral = (stats.neutral / total) * 100;
+        const pctWinning = (stats.winning / total) * 100;
 
-      function getColor(bank) {
-        if (bank <= 0) return BANK_COLORS.BLACK; // Black
-        if (bank <= 100) return BANK_COLORS.RED; // Red
-        if (bank <= 500) return BANK_COLORS.ORANGE; // Orange
-        if (bank < 1500) return BANK_COLORS.YELLOW; // Yellow (501 - 1499)
-        if (bank < 2000) return BANK_COLORS.BLUE; // Blue (1500 - 1999)
-        if (bank < 3000) return BANK_COLORS.GREEN; // Green (2000 - 2999)
-        return BANK_COLORS.NEON_GREEN; // Neon Green (>= 3000)
-      }
+        pbEls.ruined.style.width = pctRuined + '%';
+        pbEls.losing.style.width = pctLosing + '%';
+        pbEls.neutral.style.width = pctNeutral + '%';
+        pbEls.winning.style.width = pctWinning + '%';
+    }
 
-      function draw() {
+    const COLS = 40;
+    const ROWS = 25;
+
+    function getColor(bank) {
+        if (bank <= 0) return BANK_COLORS.BLACK;
+        if (bank <= 900) return BANK_COLORS.ORANGE;
+        if (bank <= 1099) return BANK_COLORS.YELLOW;
+        if (bank < 2000) return BANK_COLORS.GREEN_NORMAL;
+        if (bank < 3000) return BANK_COLORS.GREEN_HIGHLIGHT; // >= 2000
+        if (bank < 5000) return BANK_COLORS.BLUE; // >= 3000
+        if (bank < 10000) return BANK_COLORS.RED; // >= 5000
+        return BANK_COLORS.FUCHSIA; // >= 10000
+    }
+
+    function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const cellWidth = canvas.width / COLS;
@@ -458,36 +551,29 @@
         const padding = 1;
 
         for (let i = 0; i < players.length; i++) {
-          const p = players[i];
-          const col = i % COLS;
-          const row = Math.floor(i / COLS);
+            const p = players[i];
+            const col = i % COLS;
+            const row = Math.floor(i / COLS);
 
-          const x = col * cellWidth;
-          const y = row * cellHeight;
+            const x = col * cellWidth;
+            const y = row * cellHeight;
 
-          ctx.fillStyle = getColor(p.bank);
-
-          // Draw square
-          ctx.fillRect(
-            x + padding,
-            y + padding,
-            Math.max(0, cellWidth - padding * 2),
-            Math.max(0, cellHeight - padding * 2),
-          );
+            ctx.fillStyle = getColor(p.bank);
+            ctx.fillRect(x + padding, y + padding, Math.max(0, cellWidth - padding * 2), Math.max(0, cellHeight - padding * 2));
         }
-      }
+    }
 
-      function resizeCanvas() {
+    function resizeCanvas() {
         const parent = canvas.parentElement;
         if (parent.clientWidth > 0 && parent.clientHeight > 0) {
-          canvas.width = parent.clientWidth;
-          canvas.height = parent.clientHeight;
-          draw();
+            canvas.width = parent.clientWidth;
+            canvas.height = parent.clientHeight;
+            draw();
         }
-      }
+    }
 
-      // Interaction logic
-      function handleInteraction(clientX, clientY) {
+    // Interaction
+    function handleInteraction(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
         const mouseX = clientX - rect.left;
         const mouseY = clientY - rect.top;
@@ -500,75 +586,54 @@
         const index = row * COLS + col;
 
         if (index >= 0 && index < players.length) {
-          const p = players[index];
-          tooltip.style.display = "block";
+            const p = players[index];
+            tooltip.style.display = 'block';
 
-          // Tooltip positioning
-          let tooltipX = clientX + 10;
-          let tooltipY = clientY + 10;
+            let tooltipX = clientX + 15;
+            let tooltipY = clientY + 15;
 
-          // Prevent tooltip from going off screen
-          if (tooltipX + 160 > window.innerWidth) tooltipX = clientX - 170;
-          if (tooltipY + 100 > window.innerHeight) tooltipY = clientY - 110;
+            if (tooltipX + 150 > window.innerWidth) tooltipX = clientX - 160;
+            if (tooltipY + 100 > window.innerHeight) tooltipY = clientY - 110;
 
-          // Ensure tooltip doesn't go off top/left
-          if (tooltipX < 0) tooltipX = 10;
-          if (tooltipY < 0) tooltipY = 10;
+            tooltip.style.left = tooltipX + 'px';
+            tooltip.style.top = tooltipY + 'px';
 
-          tooltip.style.left = tooltipX + "px";
-          tooltip.style.top = tooltipY + "px";
-
-          tooltip.innerHTML = `
-                <strong>Agente #${p.id}</strong><br>
+            tooltip.innerHTML = `
+                <strong style="color:var(--accent-color)">Agente #${p.id}</strong><br>
                 Banca: ${p.bank}€<br>
-                ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ""}
+                ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
             `;
         } else {
-          tooltip.style.display = "none";
+            tooltip.style.display = 'none';
         }
-      }
+    }
 
-      canvas.addEventListener("mousemove", (e) => {
-        handleInteraction(e.clientX, e.clientY);
-      });
+    canvas.addEventListener('mousemove', (e) => handleInteraction(e.clientX, e.clientY));
+    canvas.addEventListener('click', (e) => handleInteraction(e.clientX, e.clientY));
+    canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive: true});
+    canvas.addEventListener('mouseleave', () => tooltip.style.display = 'none');
 
-      canvas.addEventListener("click", (e) => {
-        handleInteraction(e.clientX, e.clientY);
-      });
+    // Controls
+    playPauseBtn.addEventListener('click', toggleGame);
+    resetBtn.addEventListener('click', resetGame);
 
-      canvas.addEventListener(
-        "touchstart",
-        (e) => {
-          if (e.touches.length > 0) {
-            handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
-          }
-        },
-        { passive: true },
-      );
+    // Slider
+    speedSlider.addEventListener('input', (e) => {
+        simulationSpeed = parseInt(e.target.value, 10);
+    });
 
-      canvas.addEventListener("mouseleave", () => {
-        tooltip.style.display = "none";
-      });
+    // Stats Scroll
+    statsBtn.addEventListener('click', () => {
+        document.getElementById('statsPanel').scrollIntoView({ behavior: 'smooth' });
+    });
 
-      // Event Listeners
-      startPauseBtn.addEventListener("click", toggleGame);
-      resetBtn.addEventListener("click", resetGame);
-      statsToggleBtn.addEventListener("click", () => {
-        statsContainer.classList.toggle("visible");
-        statsToggleBtn.textContent = statsContainer.classList.contains(
-          "visible",
-        )
-          ? "Ocultar Estadísticas"
-          : "Mostrar Estadísticas";
-      });
-      window.addEventListener("resize", resizeCanvas);
+    window.addEventListener('resize', resizeCanvas);
 
-      // Initial Start
-      initGame();
-
-      // Force a resize after a small delay to ensure layout is computed
-      setTimeout(resizeCanvas, 0);
-      setTimeout(resizeCanvas, 100);
-    </script>
-  </body>
+    // Init
+    initGame();
+    setTimeout(resizeCanvas, 50);
+</script>
+</body>
 </html>
