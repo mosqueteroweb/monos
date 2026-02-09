@@ -288,6 +288,7 @@
       function initGame() {
         players = [];
         matchCount = 0;
+        rng.refill(); // Initial fill of random buffer
         for (let i = 0; i < PLAYER_COUNT; i++) {
           players.push(new Player(i));
         }
@@ -314,6 +315,12 @@
 
       function gameLoop() {
         if (!isPlaying) return;
+
+        // Ensure we have enough random bits for this batch
+        // We need 1 for global coin + 1 for each player = 1 + PLAYER_COUNT per round
+        // Total per batch: BATCH_SIZE * (1 + PLAYER_COUNT)
+        // Our SecureRandom buffer is sized for this exact amount (plus a bit margin if needed)
+        rng.refill();
 
         // Batch processing
         for (let i = 0; i < BATCH_SIZE; i++) {
