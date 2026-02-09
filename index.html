@@ -298,27 +298,6 @@
             this.maxBank = INITIAL_BANK;
             this.ruinedAt = null;
         }
-
-        play(coinSide) {
-            if (!this.active) return;
-
-            // Phase D: Random choice per player
-            // 0 = Heads, 1 = Tails
-            // Use our secure RNG
-            const choice = rng.nextBit();
-
-            if (choice === coinSide) {
-                this.bank += BET_AMOUNT;
-                if (this.bank > this.maxBank) this.maxBank = this.bank;
-            } else {
-                this.bank -= BET_AMOUNT;
-                if (this.bank <= RUINED_THRESHOLD) {
-                    this.bank = RUINED_THRESHOLD;
-                    this.active = false;
-                    this.ruinedAt = matchCount;
-                }
-            }
-        }
     }
 
     function initGame() {
@@ -365,7 +344,24 @@
             const coinSide = rng.nextBit();
 
             for (let j = 0; j < PLAYER_COUNT; j++) {
-                players[j].play(coinSide);
+                const p = players[j];
+                if (!p.active) continue;
+
+                // Phase D: Random choice per player
+                // 0 = Heads, 1 = Tails
+                const choice = Math.random() < 0.5 ? 0 : 1;
+
+                if (choice === coinSide) {
+                    p.bank += BET_AMOUNT;
+                    if (p.bank > p.maxBank) p.maxBank = p.bank;
+                } else {
+                    p.bank -= BET_AMOUNT;
+                    if (p.bank <= 0) {
+                        p.bank = 0;
+                        p.active = false;
+                        p.ruinedAt = matchCount;
+                    }
+                }
             }
         }
 
