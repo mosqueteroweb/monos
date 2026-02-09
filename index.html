@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Royale: Cara o Cruz</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --canvas-bg: #1e1e1e;
+            --danger-color: #cf6679;
+            --success-color: #4caf50;
+            --neon-color: #00ff00;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1f1f1f;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #9965f4;
+        }
+
+        button.secondary {
+            background-color: var(--secondary-color);
+        }
+
+        button.secondary:hover {
+            background-color: #018786;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            background-color: var(--canvas-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: crosshair;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        footer {
+            padding: 10px 20px;
+            background-color: #1f1f1f;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.9rem;
+            max-height: 30vh; /* Limit footer height */
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .match-counter {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        #statsToggle {
+            background: none;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        #statsContainer {
+            display: none; /* Hidden by default */
+            flex-wrap: wrap;
+            gap: 10px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+
+        #statsContainer.visible {
+            display: flex;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            min-width: 120px;
+        }
+
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Tooltip */
+        #tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            border: 1px solid #555;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1rem;
+            }
+            button {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            .stat-item {
+                width: 48%; /* 2 columns on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Battle Royale: Cara o Cruz</h1>
+    <div class="controls">
+        <button id="startPauseBtn">Iniciar</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+    </div>
+</header>
+
+<main>
+    <canvas id="gameCanvas"></canvas>
+    <div id="tooltip"></div>
+</main>
+
+<footer>
+    <div class="status-bar">
+        <span class="match-counter">Partidas: <span id="matchCount">0</span></span>
+        <button id="statsToggle">Mostrar Estadísticas</button>
+    </div>
+    <div id="statsContainer">
+        <!-- Stats Categories as requested -->
+        <div class="stat-item">Arruinados (<= 0): <span id="stat-ruined">0</span></div>
+        <div class="stat-item">Perdiendo (< 1000): <span id="stat-losing">0</span></div>
+        <div class="stat-item">Ganando (> 1000): <span id="stat-winning">0</span></div>
+        <div class="stat-item">x2 (>= 2000): <span id="stat-x2">0</span></div>
+        <div class="stat-item">x3 (>= 3000): <span id="stat-x3">0</span></div>
+        <div class="stat-item">x5 (>= 5000): <span id="stat-x5">0</span></div>
+        <div class="stat-item">x10 (>= 10000): <span id="stat-x10">0</span></div>
+    </div>
+</footer>
+
+<script>
+    // Constants
+    const INITIAL_BANK = 1000;
+    const BET_AMOUNT = 1;
+    const PLAYER_COUNT = 1000;
+    const BATCH_SIZE = 1000;
+
+    // State
+    let players = [];
+    let matchCount = 0;
+    let isPlaying = false;
+    let animationId;
+
+    // DOM Elements
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startPauseBtn = document.getElementById('startPauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const matchCountEl = document.getElementById('matchCount');
+    const statsToggleBtn = document.getElementById('statsToggle');
+    const statsContainer = document.getElementById('statsContainer');
+    const tooltip = document.getElementById('tooltip');
+
+    // Stats Elements
+    const statEls = {
+        ruined: document.getElementById('stat-ruined'),
+        losing: document.getElementById('stat-losing'), // < 1000
+        winning: document.getElementById('stat-winning'), // > 1000
+        x2: document.getElementById('stat-x2'),
+        x3: document.getElementById('stat-x3'),
+        x5: document.getElementById('stat-x5'),
+        x10: document.getElementById('stat-x10')
+    };
+
+    class Player {
+        constructor(id) {
+            this.id = id;
+            this.bank = INITIAL_BANK;
+            this.active = true;
+            this.maxBank = INITIAL_BANK;
+            this.ruinedAt = null;
+        }
+
+        play(coinSide) {
+            if (!this.active) return;
+
+            // Phase D: Random choice per player
+            // 0 = Heads, 1 = Tails
+            const choice = Math.random() < 0.5 ? 0 : 1;
+
+            if (choice === coinSide) {
+                this.bank += BET_AMOUNT;
+                if (this.bank > this.maxBank) this.maxBank = this.bank;
+            } else {
+                this.bank -= BET_AMOUNT;
+                if (this.bank <= 0) {
+                    this.bank = 0;
+                    this.active = false;
+                    this.ruinedAt = matchCount;
+                }
+            }
+        }
+    }
+
+    function initGame() {
+        players = [];
+        matchCount = 0;
+        for (let i = 0; i < PLAYER_COUNT; i++) {
+            players.push(new Player(i));
+        }
+        updateUI();
+        resizeCanvas(); // Will trigger draw
+    }
+
+    function toggleGame() {
+        isPlaying = !isPlaying;
+        startPauseBtn.textContent = isPlaying ? "Pausa" : "Reanudar";
+        if (isPlaying) {
+            gameLoop();
+        } else {
+            cancelAnimationFrame(animationId);
+        }
+    }
+
+    function resetGame() {
+        isPlaying = false;
+        cancelAnimationFrame(animationId);
+        startPauseBtn.textContent = "Iniciar";
+        initGame();
+    }
+
+    function gameLoop() {
+        if (!isPlaying) return;
+
+        // Batch processing
+        for (let i = 0; i < BATCH_SIZE; i++) {
+            matchCount++;
+            const coinSide = Math.random() < 0.5 ? 0 : 1; // Global coin flip
+
+            for (let j = 0; j < PLAYER_COUNT; j++) {
+                players[j].play(coinSide);
+            }
+        }
+
+        updateUI();
+        draw();
+
+        animationId = requestAnimationFrame(gameLoop);
+    }
+
+    function updateUI() {
+        matchCountEl.textContent = matchCount.toLocaleString();
+
+        // Calculate Stats
+        let stats = {
+            ruined: 0,
+            losing: 0,
+            winning: 0,
+            x2: 0,
+            x3: 0,
+            x5: 0,
+            x10: 0
+        };
+
+        for (const p of players) {
+            if (p.bank <= 0) stats.ruined++;
+            else if (p.bank < 1000) stats.losing++;
+            else if (p.bank > 1000) stats.winning++;
+
+            if (p.bank >= 2000) stats.x2++;
+            if (p.bank >= 3000) stats.x3++;
+            if (p.bank >= 5000) stats.x5++;
+            if (p.bank >= 10000) stats.x10++;
+        }
+
+        // Update DOM
+        statEls.ruined.textContent = stats.ruined;
+        statEls.losing.textContent = stats.losing;
+        statEls.winning.textContent = stats.winning;
+        statEls.x2.textContent = stats.x2;
+        statEls.x3.textContent = stats.x3;
+        statEls.x5.textContent = stats.x5;
+        statEls.x10.textContent = stats.x10;
+    }
+
+    const COLS = 40;
+    const ROWS = 25; // 40 * 25 = 1000
+
+    function getColor(bank) {
+        if (bank <= 0) return '#000000'; // Black
+        if (bank <= 100) return '#f44336'; // Red
+        if (bank <= 500) return '#ff9800'; // Orange
+        if (bank < 1500) return '#ffeb3b'; // Yellow (501 - 1499)
+        if (bank < 2000) return '#2196f3'; // Blue (1500 - 1999)
+        if (bank < 3000) return '#4caf50'; // Green (2000 - 2999)
+        return '#00ff00'; // Neon Green (>= 3000)
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const cellWidth = canvas.width / COLS;
+        const cellHeight = canvas.height / ROWS;
+        const padding = 1;
+
+        for (let i = 0; i < players.length; i++) {
+            const p = players[i];
+            const col = i % COLS;
+            const row = Math.floor(i / COLS);
+
+            const x = col * cellWidth;
+            const y = row * cellHeight;
+
+            ctx.fillStyle = getColor(p.bank);
+
+            // Draw square
+            ctx.fillRect(x + padding, y + padding, Math.max(0, cellWidth - padding * 2), Math.max(0, cellHeight - padding * 2));
+        }
+    }
+
+    function resizeCanvas() {
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        draw();
+    }
+
+    // Interaction logic
+    function handleInteraction(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = clientX - rect.left;
+        const mouseY = clientY - rect.top;
+
+        const cellWidth = canvas.width / COLS;
+        const cellHeight = canvas.height / ROWS;
+
+        const col = Math.floor(mouseX / cellWidth);
+        const row = Math.floor(mouseY / cellHeight);
+        const index = row * COLS + col;
+
+        if (index >= 0 && index < players.length) {
+            const p = players[index];
+            tooltip.style.display = 'block';
+
+            // Tooltip positioning
+            let tooltipX = clientX + 10;
+            let tooltipY = clientY + 10;
+
+            // Prevent tooltip from going off screen
+            if (tooltipX + 160 > window.innerWidth) tooltipX = clientX - 170;
+            if (tooltipY + 100 > window.innerHeight) tooltipY = clientY - 110;
+
+            // Ensure tooltip doesn't go off top/left
+            if (tooltipX < 0) tooltipX = 10;
+            if (tooltipY < 0) tooltipY = 10;
+
+            tooltip.style.left = tooltipX + 'px';
+            tooltip.style.top = tooltipY + 'px';
+
+            tooltip.innerHTML = `
+                <strong>Agente #${p.id}</strong><br>
+                Banca: ${p.bank}€<br>
+                ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
+            `;
+        } else {
+            tooltip.style.display = 'none';
+        }
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+        handleInteraction(e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener('click', (e) => {
+        handleInteraction(e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+        if(e.touches.length > 0) {
+            handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, {passive: true});
+
+    canvas.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+    });
+
+    // Event Listeners
+    startPauseBtn.addEventListener('click', toggleGame);
+    resetBtn.addEventListener('click', resetGame);
+    statsToggleBtn.addEventListener('click', () => {
+        statsContainer.classList.toggle('visible');
+        statsToggleBtn.textContent = statsContainer.classList.contains('visible')
+            ? "Ocultar Estadísticas"
+            : "Mostrar Estadísticas";
+    });
+    window.addEventListener('resize', resizeCanvas);
+
+    // Initial Start
+    initGame();
+</script>
+
+</body>
+</html>
