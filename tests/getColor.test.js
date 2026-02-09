@@ -50,15 +50,14 @@ test('getColor Unit Tests', async (t) => {
         assert.strictEqual(getColor(500), '#ff9800');
     });
 
-    await t.test('should return yellow (#ffeb3b) when bank is between 501 and 1499', () => {
+    await t.test('should return yellow (#ffeb3b) when bank is between 501 and 999', () => {
         assert.strictEqual(getColor(501), '#ffeb3b');
-        assert.strictEqual(getColor(1000), '#ffeb3b');
-        assert.strictEqual(getColor(1499), '#ffeb3b');
+        assert.strictEqual(getColor(999), '#ffeb3b');
     });
 
-    await t.test('should return blue (#2196f3) when bank is between 1500 and 1999', () => {
+    await t.test('should return blue (#2196f3) when bank is between 1000 and 1999', () => {
+        assert.strictEqual(getColor(1000), '#2196f3');
         assert.strictEqual(getColor(1500), '#2196f3');
-        assert.strictEqual(getColor(1750), '#2196f3');
         assert.strictEqual(getColor(1999), '#2196f3');
     });
 
