@@ -233,6 +233,7 @@
       let matchCount = 0;
       let isPlaying = false;
       let animationId;
+      let lastUITime = 0;
 
       // DOM Elements
       const canvas = document.getElementById("gameCanvas");
@@ -300,7 +301,7 @@
         isPlaying = !isPlaying;
         startPauseBtn.textContent = isPlaying ? "Pausa" : "Reanudar";
         if (isPlaying) {
-          gameLoop();
+          animationId = requestAnimationFrame(gameLoop);
         } else {
           cancelAnimationFrame(animationId);
         }
@@ -313,8 +314,11 @@
         initGame();
       }
 
-      function gameLoop() {
+      function gameLoop(timestamp) {
         if (!isPlaying) return;
+
+        // Handle initial call or resumed call where timestamp might be missing or out of sync
+        if (!timestamp) timestamp = performance.now();
 
         // Ensure we have enough random bits for this batch
         // We need 1 for global coin + 1 for each player = 1 + PLAYER_COUNT per round
@@ -332,7 +336,12 @@
           }
         }
 
-        updateUI();
+        // Throttle UI updates to ~15fps (approx every 66ms)
+        if (timestamp - lastUITime > 66) {
+          updateUI();
+          lastUITime = timestamp;
+        }
+
         draw();
 
         animationId = requestAnimationFrame(gameLoop);
