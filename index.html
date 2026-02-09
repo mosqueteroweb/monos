@@ -479,9 +479,11 @@
 
       function resizeCanvas() {
         const parent = canvas.parentElement;
-        canvas.width = parent.clientWidth;
-        canvas.height = parent.clientHeight;
-        draw();
+        if (parent.clientWidth > 0 && parent.clientHeight > 0) {
+          canvas.width = parent.clientWidth;
+          canvas.height = parent.clientHeight;
+          draw();
+        }
       }
 
       // Interaction logic
@@ -563,6 +565,10 @@
 
       // Initial Start
       initGame();
+
+      // Force a resize after a small delay to ensure layout is computed
+      setTimeout(resizeCanvas, 0);
+      setTimeout(resizeCanvas, 100);
     </script>
   </body>
 </html>
