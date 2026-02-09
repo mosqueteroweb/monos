@@ -245,6 +245,41 @@
         x10: document.getElementById('stat-x10')
     };
 
+    // Secure Random Generator Buffer
+    // Generates a large buffer of random bytes to avoid function call overhead
+    class SecureRandom {
+        constructor(bufferSize) {
+            this.bufferSize = bufferSize;
+            this.buffer = new Uint8Array(bufferSize);
+            this.index = bufferSize; // Force refill on first call
+        }
+
+        refill() {
+            // Chrome/WebCrypto limits getRandomValues to 65536 bytes per call
+            const CHUNK_SIZE = 65536;
+            for (let i = 0; i < this.bufferSize; i += CHUNK_SIZE) {
+                const end = Math.min(i + CHUNK_SIZE, this.bufferSize);
+                const view = this.buffer.subarray(i, end);
+                window.crypto.getRandomValues(view);
+            }
+            this.index = 0;
+        }
+
+        nextBit() {
+            if (this.index >= this.bufferSize) {
+                this.refill();
+            }
+            // Use the last bit of the byte (odd/even) as 0 or 1
+            const val = this.buffer[this.index] & 1;
+            this.index++;
+            return val;
+        }
+    }
+
+    // Buffer size: Enough for one full batch (1000 rounds * (1000 players + 1 global coin))
+    // = 1,001,000 bytes. ~1MB.
+    const rng = new SecureRandom((PLAYER_COUNT + 1) * BATCH_SIZE);
+
     class Player {
         constructor(id) {
             this.id = id;
@@ -259,7 +294,8 @@
 
             // Phase D: Random choice per player
             // 0 = Heads, 1 = Tails
-            const choice = Math.random() < 0.5 ? 0 : 1;
+            // Use our secure RNG
+            const choice = rng.nextBit();
 
             if (choice === coinSide) {
                 this.bank += BET_AMOUNT;
@@ -278,6 +314,7 @@
     function initGame() {
         players = [];
         matchCount = 0;
+        rng.refill(); // Initial fill of random buffer
         for (let i = 0; i < PLAYER_COUNT; i++) {
             players.push(new Player(i));
         }
@@ -305,10 +342,17 @@
     function gameLoop() {
         if (!isPlaying) return;
 
+        // Ensure we have enough random bits for this batch
+        // We need 1 for global coin + 1 for each player = 1 + PLAYER_COUNT per round
+        // Total per batch: BATCH_SIZE * (1 + PLAYER_COUNT)
+        // Our SecureRandom buffer is sized for this exact amount (plus a bit margin if needed)
+        rng.refill();
+
         // Batch processing
         for (let i = 0; i < BATCH_SIZE; i++) {
             matchCount++;
-            const coinSide = Math.random() < 0.5 ? 0 : 1; // Global coin flip
+            // Use secure RNG for global coin
+            const coinSide = rng.nextBit();
 
             for (let j = 0; j < PLAYER_COUNT; j++) {
                 players[j].play(coinSide);
