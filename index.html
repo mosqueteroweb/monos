@@ -218,6 +218,16 @@
     const PLAYER_COUNT = 1000;
     const BATCH_SIZE = 1000;
 
+    // Thresholds
+    const RUINED_THRESHOLD = 0;
+    const CRITICAL_THRESHOLD = 100;
+    const DANGER_THRESHOLD = 500;
+    const PROFIT_THRESHOLD = 1500;
+    const X2_THRESHOLD = 2000;
+    const X3_THRESHOLD = 3000;
+    const X5_THRESHOLD = 5000;
+    const X10_THRESHOLD = 10000;
+
     // State
     let players = [];
     let matchCount = 0;
@@ -237,8 +247,8 @@
     // Stats Elements
     const statEls = {
         ruined: document.getElementById('stat-ruined'),
-        losing: document.getElementById('stat-losing'), // < 1000
-        winning: document.getElementById('stat-winning'), // > 1000
+        losing: document.getElementById('stat-losing'),
+        winning: document.getElementById('stat-winning'),
         x2: document.getElementById('stat-x2'),
         x3: document.getElementById('stat-x3'),
         x5: document.getElementById('stat-x5'),
@@ -302,8 +312,8 @@
                 if (this.bank > this.maxBank) this.maxBank = this.bank;
             } else {
                 this.bank -= BET_AMOUNT;
-                if (this.bank <= 0) {
-                    this.bank = 0;
+                if (this.bank <= RUINED_THRESHOLD) {
+                    this.bank = RUINED_THRESHOLD;
                     this.active = false;
                     this.ruinedAt = matchCount;
                 }
@@ -380,14 +390,14 @@
         };
 
         for (const p of players) {
-            if (p.bank <= 0) stats.ruined++;
-            else if (p.bank < 1000) stats.losing++;
-            else if (p.bank > 1000) stats.winning++;
+            if (p.bank <= RUINED_THRESHOLD) stats.ruined++;
+            else if (p.bank < INITIAL_BANK) stats.losing++;
+            else if (p.bank > INITIAL_BANK) stats.winning++;
 
-            if (p.bank >= 2000) stats.x2++;
-            if (p.bank >= 3000) stats.x3++;
-            if (p.bank >= 5000) stats.x5++;
-            if (p.bank >= 10000) stats.x10++;
+            if (p.bank >= X2_THRESHOLD) stats.x2++;
+            if (p.bank >= X3_THRESHOLD) stats.x3++;
+            if (p.bank >= X5_THRESHOLD) stats.x5++;
+            if (p.bank >= X10_THRESHOLD) stats.x10++;
         }
 
         // Update DOM
@@ -404,13 +414,13 @@
     const ROWS = 25; // 40 * 25 = 1000
 
     function getColor(bank) {
-        if (bank <= 0) return '#000000'; // Black
-        if (bank <= 100) return '#f44336'; // Red
-        if (bank <= 500) return '#ff9800'; // Orange
-        if (bank < 1500) return '#ffeb3b'; // Yellow (501 - 1499)
-        if (bank < 2000) return '#2196f3'; // Blue (1500 - 1999)
-        if (bank < 3000) return '#4caf50'; // Green (2000 - 2999)
-        return '#00ff00'; // Neon Green (>= 3000)
+        if (bank <= RUINED_THRESHOLD) return '#000000'; // Black
+        if (bank <= CRITICAL_THRESHOLD) return '#f44336'; // Red
+        if (bank <= DANGER_THRESHOLD) return '#ff9800'; // Orange
+        if (bank < PROFIT_THRESHOLD) return '#ffeb3b'; // Yellow
+        if (bank < X2_THRESHOLD) return '#2196f3'; // Blue
+        if (bank < X3_THRESHOLD) return '#4caf50'; // Green
+        return '#00ff00'; // Neon Green (>= X3_THRESHOLD)
     }
 
     function draw() {
@@ -477,7 +487,7 @@
             tooltip.innerHTML = `
                 <strong>Agente #${p.id}</strong><br>
                 Banca: ${p.bank}€<br>
-                ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
+                ${p.bank <= RUINED_THRESHOLD ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
             `;
         } else {
             tooltip.style.display = 'none';
