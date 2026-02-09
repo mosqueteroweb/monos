@@ -80,9 +80,9 @@ test('getColor Unit Tests (Updated Palette)', async (t) => {
         assert.strictEqual(getColor(9999), '#f44336');
     });
 
-    // 8. x10 (>= 10000): Fucsia (#e91e63)
-    await t.test('should return Fuchsia (#e91e63) for >= 10000', () => {
-        assert.strictEqual(getColor(10000), '#e91e63');
-        assert.strictEqual(getColor(50000), '#e91e63');
+    // 8. x10 (>= 10000): Fucsia (#ff00ff)
+    await t.test('should return Fuchsia (#ff00ff) for >= 10000', () => {
+        assert.strictEqual(getColor(10000), '#ff00ff');
+        assert.strictEqual(getColor(50000), '#ff00ff');
     });
 });
