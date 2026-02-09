@@ -266,6 +266,51 @@
         x10: document.getElementById("stat-x10"),
       };
 
+      class SecureBatchRNG {
+        constructor() {
+          // Buffer size calculation:
+          // We need (1 + PLAYER_COUNT) bits per batch iteration.
+          // BATCH_SIZE iterations per frame.
+          // Total bits: BATCH_SIZE * (1 + PLAYER_COUNT) = 1000 * 1001 = 1,001,000 bits.
+          // In bytes: ~125KB. We use 128KB (131072 bytes) as a safe buffer.
+          this.BUFFER_SIZE = 128 * 1024;
+          this.buffer = new Uint8Array(this.BUFFER_SIZE);
+          this.bitIndex = 0;
+        }
+
+        refill() {
+          // crypto.getRandomValues has a quota of 65536 bytes
+          const CHUNK_SIZE = 65536;
+          for (
+            let offset = 0;
+            offset < this.BUFFER_SIZE;
+            offset += CHUNK_SIZE
+          ) {
+            const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
+            const view = this.buffer.subarray(offset, end);
+            window.crypto.getRandomValues(view);
+          }
+          this.bitIndex = 0;
+        }
+
+        getBit() {
+          // Safety check: if we run out of bits, refill automatically.
+          // Ideally, the game loop calls refill() explicitly to keep this hot path fast.
+          if (this.bitIndex >= this.BUFFER_SIZE * 8) {
+            this.refill();
+          }
+
+          const byteIndex = this.bitIndex >> 3;
+          const bitOffset = this.bitIndex & 7;
+          // Extract bit: (byte >> offset) & 1
+          const bit = (this.buffer[byteIndex] >> bitOffset) & 1;
+          this.bitIndex++;
+          return bit;
+        }
+      }
+
+      const rng = new SecureBatchRNG();
+
       class Player {
         constructor(id) {
           this.id = id;
@@ -280,7 +325,7 @@
 
           // Phase D: Random choice per player
           // 0 = Heads, 1 = Tails
-          const choice = Math.random() < 0.5 ? 0 : 1;
+          const choice = rng.getBit();
 
           if (choice === coinSide) {
             this.bank += BET_AMOUNT;
@@ -339,7 +384,7 @@
         // Batch processing
         for (let i = 0; i < BATCH_SIZE; i++) {
           matchCount++;
-          const coinSide = Math.random() < 0.5 ? 0 : 1; // Global coin flip
+          const coinSide = rng.getBit(); // Global coin flip
 
           for (let j = 0; j < PLAYER_COUNT; j++) {
             players[j].play(coinSide);
