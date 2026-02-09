@@ -15,11 +15,19 @@ if (!getColorMatch) {
     throw new Error('Could not find getColor function in index.html');
 }
 
+// Extract BANK_COLORS
+const bankColorsMatch = indexContent.match(/const BANK_COLORS = \{[\s\S]*?\};/);
+if (!bankColorsMatch) {
+    throw new Error('Could not find BANK_COLORS constant in index.html');
+}
+
 const getColorSource = getColorMatch[0];
+const bankColorsSource = bankColorsMatch[0];
 
 // Use new Function to create a callable version of getColor
 // We wrap it to ensure it returns the result of the internal getColor
 const getColor = new Function('bank', `
+    ${bankColorsSource}
     ${getColorSource}
     return getColor(bank);
 `);

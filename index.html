@@ -228,6 +228,16 @@
       const PLAYER_COUNT = 1000;
       const BATCH_SIZE = 1000;
 
+      const BANK_COLORS = {
+        BLACK: "#000000",
+        RED: "#f44336",
+        ORANGE: "#ff9800",
+        YELLOW: "#ffeb3b",
+        BLUE: "#2196f3",
+        GREEN: "#4caf50",
+        NEON_GREEN: "#00ff00",
+      };
+
       // State
       let players = [];
       let matchCount = 0;
@@ -386,13 +396,13 @@
       const ROWS = 25; // 40 * 25 = 1000
 
       function getColor(bank) {
-        if (bank <= 0) return "#000000"; // Black
-        if (bank <= 100) return "#f44336"; // Red
-        if (bank <= 500) return "#ff9800"; // Orange
-        if (bank < 1500) return "#ffeb3b"; // Yellow (501 - 1499)
-        if (bank < 2000) return "#2196f3"; // Blue (1500 - 1999)
-        if (bank < 3000) return "#4caf50"; // Green (2000 - 2999)
-        return "#00ff00"; // Neon Green (>= 3000)
+        if (bank <= 0) return BANK_COLORS.BLACK; // Black
+        if (bank <= 100) return BANK_COLORS.RED; // Red
+        if (bank <= 500) return BANK_COLORS.ORANGE; // Orange
+        if (bank < 1500) return BANK_COLORS.YELLOW; // Yellow (501 - 1499)
+        if (bank < 2000) return BANK_COLORS.BLUE; // Blue (1500 - 1999)
+        if (bank < 3000) return BANK_COLORS.GREEN; // Green (2000 - 2999)
+        return BANK_COLORS.NEON_GREEN; // Neon Green (>= 3000)
       }
 
       function draw() {
