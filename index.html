@@ -304,6 +304,8 @@
     const INITIAL_BANK = 1000;
     const BET_AMOUNT = 1;
     const PLAYER_COUNT = 1000;
+    const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
+    const MAX_TRACKED_ROUNDS = 100000;
 
     // Configurable via slider
     let simulationSpeed = 1000;
@@ -325,6 +327,7 @@
     let isPlaying = false;
     let animationId;
     let lastUITime = 0;
+    let trackedHistory = {};
 
     // DOM Elements
     const canvas = document.getElementById('gameCanvas');
@@ -422,6 +425,11 @@
     function initGame() {
         players = [];
         matchCount = 0;
+        trackedHistory = {};
+        TRACKED_PLAYER_IDS.forEach(id => {
+            trackedHistory[id] = [INITIAL_BANK];
+        });
+
         rng.refill();
         for (let i = 0; i < PLAYER_COUNT; i++) {
             players.push(new Player(i));
@@ -468,6 +476,12 @@
             const coinSide = rng.getBit();
             for (let j = 0; j < PLAYER_COUNT; j++) {
                 players[j].play(coinSide);
+            }
+
+            if (matchCount <= MAX_TRACKED_ROUNDS) {
+                for (const id of TRACKED_PLAYER_IDS) {
+                    trackedHistory[id].push(players[id].bank);
+                }
             }
         }
 
@@ -624,9 +638,22 @@
         simulationSpeed = parseInt(e.target.value, 10);
     });
 
-    // Stats Scroll
+    // Stats Scroll / Navigation
     statsBtn.addEventListener('click', () => {
-        document.getElementById('statsPanel').scrollIntoView({ behavior: 'smooth' });
+        if (isPlaying) toggleGame();
+
+        const dataToSave = {
+            history: trackedHistory,
+            rounds: matchCount,
+            ids: TRACKED_PLAYER_IDS
+        };
+        try {
+            localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
+            window.location.href = 'seguimiento.html';
+        } catch (e) {
+            console.error("Error saving stats:", e);
+            alert("Error al guardar datos de seguimiento.");
+        }
     });
 
     window.addEventListener('resize', resizeCanvas);
