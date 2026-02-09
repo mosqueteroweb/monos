@@ -9,7 +9,7 @@ const indexContent = fs.readFileSync(indexPath, 'utf8');
 
 // Extract getColor function using regex
 // This regex looks for the function getColor(bank) { ... }
-const getColorMatch = indexContent.match(/function getColor\(bank\) \{[\s\S]*?\n\s{4}\}/);
+const getColorMatch = indexContent.match(/function getColor\(bank\) \{[\s\S]*?\n\s*?\}/);
 
 if (!getColorMatch) {
     throw new Error('Could not find getColor function in index.html');
