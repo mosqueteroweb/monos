@@ -171,6 +171,14 @@
             font-weight: bold;
         }
 
+        .money-counter {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
         /* PROGRESS BAR */
         .progress-container {
             width: 100%;
@@ -186,10 +194,10 @@
             transition: width 0.3s ease;
         }
 
-        .pb-ruined { background-color: var(--ruined-color); }
-        .pb-losing { background-color: var(--danger-color); }
-        .pb-neutral { background-color: var(--warning-color); }
-        .pb-winning { background-color: var(--success-color); }
+        .pb-ruined { background-color: #37474f; }
+        .pb-losing { background-color: #ff9800; }
+        .pb-neutral { background-color: #ffeb3b; }
+        .pb-winning { background-color: #4caf50; }
 
         /* STATS GRID */
         .stats-grid {
@@ -248,6 +256,7 @@
 <header>
     <h1>BATTLE ROYALE</h1>
     <div class="controls">
+        <span class="money-counter" id="totalMoney">0€</span>
         <div class="slider-container" title="Velocidad de Simulación">
             <input type="range" id="speedSlider" min="100" max="10000" step="100" value="1000">
         </div>
@@ -288,14 +297,14 @@
     </div>
 
     <div class="stats-grid">
-        <div class="stat-item"><span class="dot" style="background:#37474f"></span>Arruinados (0€)<span class="stat-value" id="stat-ruined">0</span></div>
-        <div class="stat-item"><span class="dot" style="background:#ff9800"></span>Perdiendo (<900)<span class="stat-value" id="stat-losing">0</span></div>
-        <div class="stat-item"><span class="dot" style="background:#ffeb3b"></span>Neutro (900-1100)<span class="stat-value" id="stat-neutral">0</span></div>
-        <div class="stat-item"><span class="dot" style="background:#4caf50"></span>Ganando (>1100)<span class="stat-value" id="stat-winning">0</span></div>
-        <div class="stat-item"><span class="dot" style="background:#00e676"></span>x2 (>2k)<span class="stat-value" id="stat-x2">0</span></div>
-        <div class="stat-item"><span class="dot" style="background:#2196f3"></span>x3 (>3k)<span class="stat-value" id="stat-x3">0</span></div>
-        <div class="stat-item"><span class="dot" style="background:#f44336"></span>x5 (>5k)<span class="stat-value" id="stat-x5">0</span></div>
-        <div class="stat-item"><span class="dot" style="background:#e91e63"></span>x10 (>10k)<span class="stat-value" id="stat-x10">0</span></div>
+        <div class="stat-item"><span class="dot" style="background:#37474f"></span>Arruinados (0€)<span class="stat-value" id="stat-ruined">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot" style="background:#ff9800"></span>Perdiendo (<900)<span class="stat-value" id="stat-losing">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot" style="background:#ffeb3b"></span>Neutro (900-1100)<span class="stat-value" id="stat-neutral">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot" style="background:#4caf50"></span>Ganando (>1100)<span class="stat-value" id="stat-winning">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot" style="background:#00e676"></span>x2 (>2k)<span class="stat-value" id="stat-x2">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot" style="background:#2196f3"></span>x3 (>3k)<span class="stat-value" id="stat-x3">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot" style="background:#f44336"></span>x5 (>5k)<span class="stat-value" id="stat-x5">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot" style="background:#ff00ff"></span>x10 (>10k)<span class="stat-value" id="stat-x10">0 (0%)</span></div>
     </div>
 </div>
 
@@ -304,6 +313,8 @@
     const INITIAL_BANK = 1000;
     const BET_AMOUNT = 1;
     const PLAYER_COUNT = 1000;
+    const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
+    const MAX_TRACKED_ROUNDS = 100000;
 
     // Configurable via slider
     let simulationSpeed = 1000;
@@ -316,7 +327,7 @@
         GREEN_HIGHLIGHT: '#00e676', // x2
         BLUE: '#2196f3', // x3
         RED: '#f44336', // x5
-        FUCHSIA: '#e91e63' // x10
+        FUCHSIA: '#ff00ff' // x10
     };
 
     // State
@@ -325,6 +336,7 @@
     let isPlaying = false;
     let animationId;
     let lastUITime = 0;
+    let trackedHistory = {};
 
     // DOM Elements
     const canvas = document.getElementById('gameCanvas');
@@ -334,6 +346,7 @@
     const statsBtn = document.getElementById('statsBtn');
     const speedSlider = document.getElementById('speedSlider');
     const matchCountEl = document.getElementById('matchCount');
+    const totalMoneyEl = document.getElementById('totalMoney');
     const tooltip = document.getElementById('tooltip');
 
     // Icons
@@ -422,6 +435,11 @@
     function initGame() {
         players = [];
         matchCount = 0;
+        trackedHistory = {};
+        TRACKED_PLAYER_IDS.forEach(id => {
+            trackedHistory[id] = [INITIAL_BANK];
+        });
+
         rng.refill();
         for (let i = 0; i < PLAYER_COUNT; i++) {
             players.push(new Player(i));
@@ -469,6 +487,12 @@
             for (let j = 0; j < PLAYER_COUNT; j++) {
                 players[j].play(coinSide);
             }
+
+            if (matchCount <= MAX_TRACKED_ROUNDS) {
+                for (const id of TRACKED_PLAYER_IDS) {
+                    trackedHistory[id].push(players[id].bank);
+                }
+            }
         }
 
         if (timestamp - lastUITime > 66) {
@@ -494,7 +518,10 @@
             x10: 0
         };
 
+        let totalMoney = 0;
+
         for (const p of players) {
+            totalMoney += p.bank;
             if (p.bank <= 0) stats.ruined++;
             else if (p.bank <= 900) stats.losing++;
             else if (p.bank <= 1099) stats.neutral++;
@@ -507,17 +534,22 @@
             if (p.bank >= 10000) stats.x10++;
         }
 
-        statEls.ruined.textContent = stats.ruined;
-        statEls.losing.textContent = stats.losing;
-        statEls.neutral.textContent = stats.neutral;
-        statEls.winning.textContent = stats.winning;
-        statEls.x2.textContent = stats.x2;
-        statEls.x3.textContent = stats.x3;
-        statEls.x5.textContent = stats.x5;
-        statEls.x10.textContent = stats.x10;
+        totalMoneyEl.textContent = totalMoney.toLocaleString() + '€';
+
+        const total = PLAYER_COUNT;
+
+        const getPct = (val) => Math.round((val / total) * 100);
+
+        statEls.ruined.textContent = `${stats.ruined} (${getPct(stats.ruined)}%)`;
+        statEls.losing.textContent = `${stats.losing} (${getPct(stats.losing)}%)`;
+        statEls.neutral.textContent = `${stats.neutral} (${getPct(stats.neutral)}%)`;
+        statEls.winning.textContent = `${stats.winning} (${getPct(stats.winning)}%)`;
+        statEls.x2.textContent = `${stats.x2} (${getPct(stats.x2)}%)`;
+        statEls.x3.textContent = `${stats.x3} (${getPct(stats.x3)}%)`;
+        statEls.x5.textContent = `${stats.x5} (${getPct(stats.x5)}%)`;
+        statEls.x10.textContent = `${stats.x10} (${getPct(stats.x10)}%)`;
 
         // Update Progress Bars
-        const total = PLAYER_COUNT;
         const pctRuined = (stats.ruined / total) * 100;
         const pctLosing = (stats.losing / total) * 100;
         const pctNeutral = (stats.neutral / total) * 100;
@@ -624,9 +656,22 @@
         simulationSpeed = parseInt(e.target.value, 10);
     });
 
-    // Stats Scroll
+    // Stats Scroll / Navigation
     statsBtn.addEventListener('click', () => {
-        document.getElementById('statsPanel').scrollIntoView({ behavior: 'smooth' });
+        if (isPlaying) toggleGame();
+
+        const dataToSave = {
+            history: trackedHistory,
+            rounds: matchCount,
+            ids: TRACKED_PLAYER_IDS
+        };
+        try {
+            localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
+            window.location.href = 'seguimiento.html';
+        } catch (e) {
+            console.error("Error saving stats:", e);
+            alert("Error al guardar datos de seguimiento.");
+        }
     });
 
     window.addEventListener('resize', resizeCanvas);
