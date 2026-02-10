@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Battle Royale: Cara o Cruz</title>
+    <title>Battle Royale: Cara o Cruz (Web Worker)</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -52,19 +52,19 @@
             gap: 10px;
         }
 
-        .worker-link {
+        .back-link {
             font-size: 0.8rem;
             text-decoration: none;
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
+            color: var(--text-secondary);
+            border: 1px solid #444;
             padding: 4px 8px;
             border-radius: 4px;
             transition: all 0.2s;
         }
 
-        .worker-link:hover {
-            background: var(--accent-color);
-            color: #000;
+        .back-link:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
         }
 
         .controls {
@@ -273,8 +273,8 @@
 
 <header>
     <h1>
-        BATTLE ROYALE
-        <a href="webworker.html" class="worker-link" title="Versión con Web Worker para mejor rendimiento">Versión Worker →</a>
+        <a href="index.html" class="back-link">← Volver</a>
+        BATTLE ROYALE (WORKER)
     </h1>
     <div class="controls">
         <span class="money-counter" id="totalMoney">0€</span>
@@ -331,15 +331,6 @@
 
 <script>
     // Constants
-    const INITIAL_BANK = 1000;
-    const BET_AMOUNT = 1;
-    const PLAYER_COUNT = 1000;
-    const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
-    const MAX_TRACKED_ROUNDS = 100000;
-
-    // Configurable via slider
-    let simulationSpeed = 1000;
-
     const BANK_COLORS = {
         BLACK: '#000000', // Ruined
         ORANGE: '#ff9800', // Losing (<900)
@@ -352,12 +343,14 @@
     };
 
     // State
-    let players = [];
+    let localPlayers = []; // { id, bank, visualBank, active, ruinedAt }
     let matchCount = 0;
     let isPlaying = false;
     let animationId;
     let lastUITime = 0;
-    let trackedHistory = {};
+
+    // Worker
+    const worker = new Worker('worker.js');
 
     // DOM Elements
     const canvas = document.getElementById('gameCanvas');
@@ -394,80 +387,57 @@
         winning: document.getElementById('pb-winning')
     };
 
-    class SecureBatchRNG {
-        constructor() {
-            this.BUFFER_SIZE = 128 * 1024;
-            this.buffer = new Uint8Array(this.BUFFER_SIZE);
-            this.bitIndex = 0;
-        }
+    // Worker Message Handling
+    worker.onmessage = function(e) {
+        const data = e.data;
+        if (data.type === 'UPDATE') {
+            matchCount = data.matchCount;
+            updateLocalPlayers(data.players);
 
-        refill() {
-            const CHUNK_SIZE = 65536;
-            for (let offset = 0; offset < this.BUFFER_SIZE; offset += CHUNK_SIZE) {
-                const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
-                const view = this.buffer.subarray(offset, end);
-                window.crypto.getRandomValues(view);
+            const now = performance.now();
+            if (now - lastUITime > 66) {
+                updateUI();
+                lastUITime = now;
             }
-            this.bitIndex = 0;
-        }
-
-        getBit() {
-            if (this.bitIndex >= this.BUFFER_SIZE * 8) {
-                this.refill();
-            }
-            const byteIndex = this.bitIndex >> 3;
-            const bitOffset = this.bitIndex & 7;
-            const bit = (this.buffer[byteIndex] >> bitOffset) & 1;
-            this.bitIndex++;
-            return bit;
-        }
-    }
-
-    const rng = new SecureBatchRNG();
-
-    class Player {
-        constructor(id) {
-            this.id = id;
-            this.bank = INITIAL_BANK;
-            this.visualBank = INITIAL_BANK; // Smooth transitions
-            this.active = true;
-            this.maxBank = INITIAL_BANK;
-            this.ruinedAt = null;
-        }
-
-        play(coinSide) {
-            if (!this.active) return;
-
-            const choice = rng.getBit();
-
-            if (choice === coinSide) {
-                this.bank += BET_AMOUNT;
-                if (this.bank > this.maxBank) this.maxBank = this.bank;
-            } else {
-                this.bank -= BET_AMOUNT;
-                if (this.bank <= 0) {
-                    this.bank = 0;
-                    this.active = false;
-                    this.ruinedAt = matchCount;
-                }
+        } else if (data.type === 'HISTORY') {
+            // Save history and navigate
+            const dataToSave = {
+                history: data.history,
+                rounds: data.rounds,
+                ids: data.ids
+            };
+            try {
+                localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
+                window.location.href = 'seguimiento.html';
+            } catch (err) {
+                console.error("Error saving stats:", err);
+                alert("Error al guardar datos de seguimiento.");
             }
         }
-    }
+    };
 
-    function initGame() {
-        players = [];
-        matchCount = 0;
-        trackedHistory = {};
-        TRACKED_PLAYER_IDS.forEach(id => {
-            trackedHistory[id] = [INITIAL_BANK];
-        });
-
-        rng.refill();
-        for (let i = 0; i < PLAYER_COUNT; i++) {
-            players.push(new Player(i));
+    function updateLocalPlayers(workerPlayers) {
+        if (localPlayers.length === 0) {
+            // Initialize
+            localPlayers = workerPlayers.map(p => ({
+                id: p.id,
+                bank: p.bank,
+                visualBank: p.bank,
+                active: p.active,
+                ruinedAt: p.ruinedAt,
+                maxBank: p.maxBank
+            }));
+        } else {
+            // Update existing
+            for (let i = 0; i < localPlayers.length; i++) {
+                const wp = workerPlayers[i];
+                const lp = localPlayers[i];
+                lp.bank = wp.bank;
+                lp.active = wp.active;
+                lp.ruinedAt = wp.ruinedAt;
+                lp.maxBank = wp.maxBank;
+            }
         }
-        updateUI();
-        resizeCanvas();
     }
 
     function toggleGame() {
@@ -476,59 +446,38 @@
             iconPlay.style.display = 'none';
             iconPause.style.display = 'block';
             playPauseBtn.classList.add('active');
-            animationId = requestAnimationFrame(gameLoop);
+            worker.postMessage({ type: 'START' });
         } else {
             iconPlay.style.display = 'block';
             iconPause.style.display = 'none';
             playPauseBtn.classList.remove('active');
-            cancelAnimationFrame(animationId);
+            worker.postMessage({ type: 'STOP' });
         }
     }
 
     function resetGame() {
         isPlaying = false;
-        cancelAnimationFrame(animationId);
         iconPlay.style.display = 'block';
         iconPause.style.display = 'none';
         playPauseBtn.classList.remove('active');
-        initGame();
+        worker.postMessage({ type: 'RESET' });
+
+        // Reset local visual state immediately
+        matchCount = 0;
+        matchCountEl.textContent = '0';
+        localPlayers = []; // Force re-initialization on next update for instant reset
     }
 
-    function gameLoop(timestamp) {
-        if (!isPlaying) return;
-        if (!timestamp) timestamp = performance.now();
-
-        rng.refill();
-
-        // Use dynamic speed from slider
-        const currentSpeed = simulationSpeed;
-
-        for (let i = 0; i < currentSpeed; i++) {
-            matchCount++;
-            const coinSide = rng.getBit();
-            for (let j = 0; j < PLAYER_COUNT; j++) {
-                players[j].play(coinSide);
-            }
-
-            if (matchCount <= MAX_TRACKED_ROUNDS) {
-                for (const id of TRACKED_PLAYER_IDS) {
-                    trackedHistory[id].push(players[id].bank);
-                }
-            }
-        }
-
-        if (timestamp - lastUITime > 66) {
-            updateUI();
-            lastUITime = timestamp;
-        }
-
-        // Interpolation for smooth visualization
-        for (let j = 0; j < PLAYER_COUNT; j++) {
-            players[j].visualBank += (players[j].bank - players[j].visualBank) * 0.1;
+    // Animation Loop for Smooth Rendering
+    function renderLoop() {
+        // Interpolation
+        for (let i = 0; i < localPlayers.length; i++) {
+            const p = localPlayers[i];
+            p.visualBank += (p.bank - p.visualBank) * 0.1;
         }
 
         draw();
-        animationId = requestAnimationFrame(gameLoop);
+        requestAnimationFrame(renderLoop);
     }
 
     function updateUI() {
@@ -536,9 +485,9 @@
 
         let stats = {
             ruined: 0,
-            losing: 0, // < 900
-            neutral: 0, // 900-1100
-            winning: 0, // > 1100
+            losing: 0,
+            neutral: 0,
+            winning: 0,
             x2: 0,
             x3: 0,
             x5: 0,
@@ -547,14 +496,13 @@
 
         let totalMoney = 0;
 
-        for (const p of players) {
+        for (const p of localPlayers) {
             totalMoney += p.bank;
             if (p.bank <= 0) stats.ruined++;
             else if (p.bank <= 900) stats.losing++;
             else if (p.bank <= 1099) stats.neutral++;
             else stats.winning++;
 
-            // Accumulative stats for highlighting
             if (p.bank >= 2000) stats.x2++;
             if (p.bank >= 3000) stats.x3++;
             if (p.bank >= 5000) stats.x5++;
@@ -563,7 +511,7 @@
 
         totalMoneyEl.textContent = totalMoney.toLocaleString() + '€';
 
-        const total = PLAYER_COUNT;
+        const total = localPlayers.length || 1; // Avoid division by zero
 
         const getPct = (val) => Math.round((val / total) * 100);
 
@@ -576,7 +524,6 @@
         statEls.x5.textContent = `${stats.x5} (${getPct(stats.x5)}%)`;
         statEls.x10.textContent = `${stats.x10} (${getPct(stats.x10)}%)`;
 
-        // Update Progress Bars
         const pctRuined = (stats.ruined / total) * 100;
         const pctLosing = (stats.losing / total) * 100;
         const pctNeutral = (stats.neutral / total) * 100;
@@ -596,10 +543,10 @@
         if (bank <= 900) return BANK_COLORS.ORANGE;
         if (bank <= 1099) return BANK_COLORS.YELLOW;
         if (bank < 2000) return BANK_COLORS.GREEN_NORMAL;
-        if (bank < 3000) return BANK_COLORS.GREEN_HIGHLIGHT; // >= 2000
-        if (bank < 5000) return BANK_COLORS.BLUE; // >= 3000
-        if (bank < 10000) return BANK_COLORS.RED; // >= 5000
-        return BANK_COLORS.FUCHSIA; // >= 10000
+        if (bank < 3000) return BANK_COLORS.GREEN_HIGHLIGHT;
+        if (bank < 5000) return BANK_COLORS.BLUE;
+        if (bank < 10000) return BANK_COLORS.RED;
+        return BANK_COLORS.FUCHSIA;
     }
 
     function draw() {
@@ -609,15 +556,14 @@
         const cellHeight = canvas.height / ROWS;
         const padding = 1;
 
-        for (let i = 0; i < players.length; i++) {
-            const p = players[i];
+        for (let i = 0; i < localPlayers.length; i++) {
+            const p = localPlayers[i];
             const col = i % COLS;
             const row = Math.floor(i / COLS);
 
             const x = col * cellWidth;
             const y = row * cellHeight;
 
-            // Force black immediately if ruined, otherwise use visualBank
             if (p.bank <= 0) {
                 ctx.fillStyle = BANK_COLORS.BLACK;
             } else {
@@ -650,8 +596,8 @@
         const row = Math.floor(mouseY / cellHeight);
         const index = row * COLS + col;
 
-        if (index >= 0 && index < players.length) {
-            const p = players[index];
+        if (index >= 0 && index < localPlayers.length) {
+            const p = localPlayers[index];
             tooltip.style.display = 'block';
 
             let tooltipX = clientX + 15;
@@ -686,32 +632,22 @@
 
     // Slider
     speedSlider.addEventListener('input', (e) => {
-        simulationSpeed = parseInt(e.target.value, 10);
+        const val = parseInt(e.target.value, 10);
+        worker.postMessage({ type: 'SPEED', value: val });
     });
 
-    // Stats Scroll / Navigation
+    // Stats
     statsBtn.addEventListener('click', () => {
-        if (isPlaying) toggleGame();
-
-        const dataToSave = {
-            history: trackedHistory,
-            rounds: matchCount,
-            ids: TRACKED_PLAYER_IDS
-        };
-        try {
-            localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
-            window.location.href = 'seguimiento.html';
-        } catch (e) {
-            console.error("Error saving stats:", e);
-            alert("Error al guardar datos de seguimiento.");
-        }
+        if (isPlaying) toggleGame(); // Pause
+        worker.postMessage({ type: 'GET_HISTORY' });
     });
 
     window.addEventListener('resize', resizeCanvas);
 
     // Init
-    initGame();
+    worker.postMessage({ type: 'INIT' });
     setTimeout(resizeCanvas, 50);
+    requestAnimationFrame(renderLoop);
 </script>
 </body>
 </html>
