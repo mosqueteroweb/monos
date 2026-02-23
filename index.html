@@ -663,11 +663,20 @@
             tooltip.style.left = tooltipX + 'px';
             tooltip.style.top = tooltipY + 'px';
 
-            tooltip.innerHTML = `
-                <strong style="color:var(--accent-color)">Agente #${p.id}</strong><br>
-                Banca: ${p.bank}€<br>
-                ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
-            `;
+            tooltip.textContent = '';
+            const title = document.createElement('strong');
+            title.style.color = 'var(--accent-color)';
+            title.textContent = `Agente #${p.id}`;
+            tooltip.appendChild(title);
+            tooltip.appendChild(document.createElement('br'));
+            tooltip.appendChild(document.createTextNode(`Banca: ${p.bank}€`));
+            if (p.bank <= 0) {
+                tooltip.appendChild(document.createElement('br'));
+                const ruinedSpan = document.createElement('span');
+                ruinedSpan.style.color = 'var(--danger-color)';
+                ruinedSpan.textContent = `Arruinado (Ronda ${p.ruinedAt})`;
+                tooltip.appendChild(ruinedSpan);
+            }
         } else {
             tooltip.style.display = 'none';
         }
