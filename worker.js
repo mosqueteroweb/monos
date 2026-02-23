@@ -19,14 +19,19 @@ class SecureBatchRNG {
         this.BUFFER_SIZE = 128 * 1024;
         this.buffer = new Uint8Array(this.BUFFER_SIZE);
         this.bitIndex = 0;
-    }
 
-    refill() {
+        // Pre-calculate chunks to avoid temporary views in refill()
+        this.views = [];
         const CHUNK_SIZE = 65536;
         for (let offset = 0; offset < this.BUFFER_SIZE; offset += CHUNK_SIZE) {
             const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
-            const view = this.buffer.subarray(offset, end);
-            self.crypto.getRandomValues(view);
+            this.views.push(this.buffer.subarray(offset, end));
+        }
+    }
+
+    refill() {
+        for (let i = 0; i < this.views.length; i++) {
+            self.crypto.getRandomValues(this.views[i]);
         }
         this.bitIndex = 0;
     }
