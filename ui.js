@@ -1,15 +1,3 @@
-// Constants
-const BANK_COLORS = {
-    BLACK: '#000000', // Ruined
-    ORANGE: '#ff9800', // Losing (<900)
-    YELLOW: '#ffeb3b', // Neutral (901-1099)
-    GREEN_NORMAL: '#4caf50', // Winning (>1100)
-    GREEN_HIGHLIGHT: '#00e676', // x2
-    BLUE: '#2196f3', // x3
-    RED: '#f44336', // x5
-    FUCHSIA: '#ff00ff' // x10
-};
-
 // State
 let localPlayers = []; // { id, bank, visualBank, active, ruinedAt }
 let matchCount = 0;
@@ -60,7 +48,7 @@ worker.onmessage = function(e) {
     const data = e.data;
     if (data.type === 'UPDATE') {
         matchCount = data.matchCount;
-        updateLocalPlayers(data.players);
+        localPlayers = updateLocalPlayers(data.players, localPlayers);
 
         const now = performance.now();
         if (now - lastUITime > 66) {
@@ -84,29 +72,6 @@ worker.onmessage = function(e) {
     }
 };
 
-function updateLocalPlayers(workerPlayers) {
-    if (localPlayers.length === 0) {
-        // Initialize
-        localPlayers = workerPlayers.map(p => ({
-            id: p.id,
-            bank: p.bank,
-            visualBank: p.bank,
-            active: p.active,
-            ruinedAt: p.ruinedAt,
-            maxBank: p.maxBank
-        }));
-    } else {
-        // Update existing
-        for (let i = 0; i < localPlayers.length; i++) {
-            const wp = workerPlayers[i];
-            const lp = localPlayers[i];
-            lp.bank = wp.bank;
-            lp.active = wp.active;
-            lp.ruinedAt = wp.ruinedAt;
-            lp.maxBank = wp.maxBank;
-        }
-    }
-}
 
 function toggleGame() {
     isPlaying = !isPlaying;
@@ -166,15 +131,15 @@ function updateUI() {
 
     for (const p of localPlayers) {
         totalMoney += p.bank;
-        if (p.bank <= 0) stats.ruined++;
-        else if (p.bank <= 900) stats.losing++;
-        else if (p.bank <= 1099) stats.neutral++;
+        if (p.bank <= THRESHOLDS.RUINED) stats.ruined++;
+        else if (p.bank <= THRESHOLDS.LOSING) stats.losing++;
+        else if (p.bank <= THRESHOLDS.NEUTRAL) stats.neutral++;
         else stats.winning++;
 
-        if (p.bank >= 2000) stats.x2++;
-        if (p.bank >= 3000) stats.x3++;
-        if (p.bank >= 5000) stats.x5++;
-        if (p.bank >= 10000) stats.x10++;
+        if (p.bank >= THRESHOLDS.X2) stats.x2++;
+        if (p.bank >= THRESHOLDS.X3) stats.x3++;
+        if (p.bank >= THRESHOLDS.X5) stats.x5++;
+        if (p.bank >= THRESHOLDS.X10) stats.x10++;
     }
 
     totalMoneyEl.textContent = totalMoney.toLocaleString() + '€';
@@ -206,17 +171,6 @@ function updateUI() {
 const COLS = 40;
 const ROWS = 25;
 
-function getColor(bank) {
-    if (bank <= 0) return BANK_COLORS.BLACK;
-    if (bank <= 900) return BANK_COLORS.ORANGE;
-    if (bank <= 1099) return BANK_COLORS.YELLOW;
-    if (bank < 2000) return BANK_COLORS.GREEN_NORMAL;
-    if (bank < 3000) return BANK_COLORS.GREEN_HIGHLIGHT;
-    if (bank < 5000) return BANK_COLORS.BLUE;
-    if (bank < 10000) return BANK_COLORS.RED;
-    return BANK_COLORS.FUCHSIA;
-}
-
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -232,7 +186,7 @@ function draw() {
         const x = col * cellWidth;
         const y = row * cellHeight;
 
-        if (p.bank <= 0) {
+        if (p.bank <= THRESHOLDS.RUINED) {
             ctx.fillStyle = BANK_COLORS.BLACK;
         } else {
             ctx.fillStyle = getColor(p.visualBank);
@@ -280,7 +234,7 @@ function handleInteraction(clientX, clientY) {
         tooltip.innerHTML = `
             <strong style="color:var(--accent-color)">Agente #${p.id}</strong><br>
             Banca: ${p.bank}€<br>
-            ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
+            ${p.bank <= THRESHOLDS.RUINED ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
         `;
     } else {
         tooltip.style.display = 'none';
