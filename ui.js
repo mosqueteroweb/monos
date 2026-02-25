@@ -64,7 +64,7 @@ worker.onmessage = function(e) {
         };
         try {
             localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
-            window.location.href = 'seguimiento.html';
+            window.location.href = 'seguimiento.html?from=webworker.html';
         } catch (err) {
             console.error("Error saving stats:", err);
             alert("Error al guardar datos de seguimiento.");
