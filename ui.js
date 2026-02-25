@@ -131,15 +131,15 @@ function updateUI() {
 
     for (const p of localPlayers) {
         totalMoney += p.bank;
-        if (p.bank <= 0) stats.ruined++;
-        else if (p.bank <= 900) stats.losing++;
-        else if (p.bank <= 1099) stats.neutral++;
+        if (p.bank <= THRESHOLDS.RUINED) stats.ruined++;
+        else if (p.bank <= THRESHOLDS.LOSING) stats.losing++;
+        else if (p.bank <= THRESHOLDS.NEUTRAL) stats.neutral++;
         else stats.winning++;
 
-        if (p.bank >= 2000) stats.x2++;
-        if (p.bank >= 3000) stats.x3++;
-        if (p.bank >= 5000) stats.x5++;
-        if (p.bank >= 10000) stats.x10++;
+        if (p.bank >= THRESHOLDS.X2) stats.x2++;
+        if (p.bank >= THRESHOLDS.X3) stats.x3++;
+        if (p.bank >= THRESHOLDS.X5) stats.x5++;
+        if (p.bank >= THRESHOLDS.X10) stats.x10++;
     }
 
     totalMoneyEl.textContent = totalMoney.toLocaleString() + '€';
@@ -186,7 +186,7 @@ function draw() {
         const x = col * cellWidth;
         const y = row * cellHeight;
 
-        if (p.bank <= 0) {
+        if (p.bank <= THRESHOLDS.RUINED) {
             ctx.fillStyle = BANK_COLORS.BLACK;
         } else {
             ctx.fillStyle = getColor(p.visualBank);
@@ -234,7 +234,7 @@ function handleInteraction(clientX, clientY) {
         tooltip.innerHTML = `
             <strong style="color:var(--accent-color)">Agente #${p.id}</strong><br>
             Banca: ${p.bank}€<br>
-            ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
+            ${p.bank <= THRESHOLDS.RUINED ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
         `;
     } else {
         tooltip.style.display = 'none';

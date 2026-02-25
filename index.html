@@ -544,16 +544,16 @@
 
         for (const p of players) {
             totalMoney += p.bank;
-            if (p.bank <= 0) stats.ruined++;
-            else if (p.bank <= 900) stats.losing++;
-            else if (p.bank <= 1099) stats.neutral++;
+            if (p.bank <= THRESHOLDS.RUINED) stats.ruined++;
+            else if (p.bank <= THRESHOLDS.LOSING) stats.losing++;
+            else if (p.bank <= THRESHOLDS.NEUTRAL) stats.neutral++;
             else stats.winning++;
 
             // Accumulative stats for highlighting
-            if (p.bank >= 2000) stats.x2++;
-            if (p.bank >= 3000) stats.x3++;
-            if (p.bank >= 5000) stats.x5++;
-            if (p.bank >= 10000) stats.x10++;
+            if (p.bank >= THRESHOLDS.X2) stats.x2++;
+            if (p.bank >= THRESHOLDS.X3) stats.x3++;
+            if (p.bank >= THRESHOLDS.X5) stats.x5++;
+            if (p.bank >= THRESHOLDS.X10) stats.x10++;
         }
 
         totalMoneyEl.textContent = totalMoney.toLocaleString() + '€';
@@ -602,7 +602,7 @@
             const y = row * cellHeight;
 
             // Force black immediately if ruined, otherwise use visualBank
-            if (p.bank <= 0) {
+            if (p.bank <= THRESHOLDS.RUINED) {
                 ctx.fillStyle = BANK_COLORS.BLACK;
             } else {
                 ctx.fillStyle = getColor(p.visualBank);
@@ -654,7 +654,7 @@
             tooltip.appendChild(title);
             tooltip.appendChild(document.createElement('br'));
             tooltip.appendChild(document.createTextNode(`Banca: ${p.bank}€`));
-            if (p.bank <= 0) {
+            if (p.bank <= THRESHOLDS.RUINED) {
                 tooltip.appendChild(document.createElement('br'));
                 const ruinedSpan = document.createElement('span');
                 ruinedSpan.style.color = 'var(--danger-color)';
