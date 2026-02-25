@@ -99,8 +99,6 @@ function runBenchmark() {
 
     const indexPath = path.join(__dirname, '..', 'index.html');
     const indexContent = fs.readFileSync(indexPath, 'utf8');
-    const logicPath = path.join(__dirname, '..', 'logic.js');
-    const logicContent = fs.readFileSync(logicPath, 'utf8');
 
     // Extract JS from <script>
     const scriptMatch = indexContent.match(/<script>([\s\S]*?)<\/script>/);
@@ -128,14 +126,6 @@ function runBenchmark() {
     };
 
     vm.createContext(context);
-
-    // Execute logic.js
-    try {
-        vm.runInContext(logicContent, context);
-    } catch (e) {
-        console.error('Error running logic.js:', e);
-        process.exit(1);
-    }
 
     // Execute the script to initialize variables and functions
     try {
