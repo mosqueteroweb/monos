@@ -329,6 +329,7 @@
     </div>
 </div>
 
+<script src="logic.js"></script>
 <script>
     // Constants
     const INITIAL_BANK = 1000;
@@ -339,17 +340,6 @@
 
     // Configurable via slider
     let simulationSpeed = 1000;
-
-    const BANK_COLORS = {
-        BLACK: '#000000', // Ruined
-        ORANGE: '#ff9800', // Losing (<900)
-        YELLOW: '#ffeb3b', // Neutral (901-1099)
-        GREEN_NORMAL: '#4caf50', // Winning (>1100)
-        GREEN_HIGHLIGHT: '#00e676', // x2
-        BLUE: '#2196f3', // x3
-        RED: '#f44336', // x5
-        FUCHSIA: '#ff00ff' // x10
-    };
 
     // State
     let players = [];
@@ -554,16 +544,16 @@
 
         for (const p of players) {
             totalMoney += p.bank;
-            if (p.bank <= 0) stats.ruined++;
-            else if (p.bank <= 900) stats.losing++;
-            else if (p.bank <= 1099) stats.neutral++;
+            if (p.bank <= THRESHOLDS.RUINED) stats.ruined++;
+            else if (p.bank <= THRESHOLDS.LOSING) stats.losing++;
+            else if (p.bank <= THRESHOLDS.NEUTRAL) stats.neutral++;
             else stats.winning++;
 
             // Accumulative stats for highlighting
-            if (p.bank >= 2000) stats.x2++;
-            if (p.bank >= 3000) stats.x3++;
-            if (p.bank >= 5000) stats.x5++;
-            if (p.bank >= 10000) stats.x10++;
+            if (p.bank >= THRESHOLDS.X2) stats.x2++;
+            if (p.bank >= THRESHOLDS.X3) stats.x3++;
+            if (p.bank >= THRESHOLDS.X5) stats.x5++;
+            if (p.bank >= THRESHOLDS.X10) stats.x10++;
         }
 
         totalMoneyEl.textContent = totalMoney.toLocaleString() + '€';
@@ -596,17 +586,6 @@
     const COLS = 40;
     const ROWS = 25;
 
-    function getColor(bank) {
-        if (bank <= 0) return BANK_COLORS.BLACK;
-        if (bank <= 900) return BANK_COLORS.ORANGE;
-        if (bank <= 1099) return BANK_COLORS.YELLOW;
-        if (bank < 2000) return BANK_COLORS.GREEN_NORMAL;
-        if (bank < 3000) return BANK_COLORS.GREEN_HIGHLIGHT; // >= 2000
-        if (bank < 5000) return BANK_COLORS.BLUE; // >= 3000
-        if (bank < 10000) return BANK_COLORS.RED; // >= 5000
-        return BANK_COLORS.FUCHSIA; // >= 10000
-    }
-
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -623,7 +602,7 @@
             const y = row * cellHeight;
 
             // Force black immediately if ruined, otherwise use visualBank
-            if (p.bank <= 0) {
+            if (p.bank <= THRESHOLDS.RUINED) {
                 ctx.fillStyle = BANK_COLORS.BLACK;
             } else {
                 ctx.fillStyle = getColor(p.visualBank);
@@ -675,7 +654,7 @@
             tooltip.appendChild(title);
             tooltip.appendChild(document.createElement('br'));
             tooltip.appendChild(document.createTextNode(`Banca: ${p.bank}€`));
-            if (p.bank <= 0) {
+            if (p.bank <= THRESHOLDS.RUINED) {
                 tooltip.appendChild(document.createElement('br'));
                 const ruinedSpan = document.createElement('span');
                 ruinedSpan.style.color = 'var(--danger-color)';
