@@ -1,35 +1,6 @@
-const fs = require('node:fs');
-const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert');
-
-// Read index.html
-const indexPath = path.join(__dirname, '..', 'index.html');
-const indexContent = fs.readFileSync(indexPath, 'utf8');
-
-// Extract getColor function using regex
-// This regex looks for the function getColor(bank) { ... }
-const getColorMatch = indexContent.match(/function getColor\(bank\) \{[\s\S]*?\n\s*?\}/);
-
-if (!getColorMatch) {
-    throw new Error('Could not find getColor function in index.html');
-}
-
-// Extract BANK_COLORS
-const bankColorsMatch = indexContent.match(/const BANK_COLORS = \{[\s\S]*?\};/);
-if (!bankColorsMatch) {
-    throw new Error('Could not find BANK_COLORS constant in index.html');
-}
-
-const getColorSource = getColorMatch[0];
-const bankColorsSource = bankColorsMatch[0];
-
-// Use new Function to create a callable version of getColor
-const getColor = new Function('bank', `
-    ${bankColorsSource}
-    ${getColorSource}
-    return getColor(bank);
-`);
+const { getColor } = require('../logic.js');
 
 test('getColor Unit Tests (Updated Palette)', async (t) => {
     // 1. Arruinados (<= 0): Negro (#000000)

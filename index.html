@@ -329,6 +329,7 @@
     </div>
 </div>
 
+<script src="logic.js"></script>
 <script>
     // Constants
     const INITIAL_BANK = 1000;
@@ -339,17 +340,6 @@
 
     // Configurable via slider
     let simulationSpeed = 1000;
-
-    const BANK_COLORS = {
-        BLACK: '#000000', // Ruined
-        ORANGE: '#ff9800', // Losing (<900)
-        YELLOW: '#ffeb3b', // Neutral (901-1099)
-        GREEN_NORMAL: '#4caf50', // Winning (>1100)
-        GREEN_HIGHLIGHT: '#00e676', // x2
-        BLUE: '#2196f3', // x3
-        RED: '#f44336', // x5
-        FUCHSIA: '#ff00ff' // x10
-    };
 
     // State
     let players = [];
@@ -595,17 +585,6 @@
 
     const COLS = 40;
     const ROWS = 25;
-
-    function getColor(bank) {
-        if (bank <= 0) return BANK_COLORS.BLACK;
-        if (bank <= 900) return BANK_COLORS.ORANGE;
-        if (bank <= 1099) return BANK_COLORS.YELLOW;
-        if (bank < 2000) return BANK_COLORS.GREEN_NORMAL;
-        if (bank < 3000) return BANK_COLORS.GREEN_HIGHLIGHT; // >= 2000
-        if (bank < 5000) return BANK_COLORS.BLUE; // >= 3000
-        if (bank < 10000) return BANK_COLORS.RED; // >= 5000
-        return BANK_COLORS.FUCHSIA; // >= 10000
-    }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
