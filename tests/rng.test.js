@@ -1,32 +1,11 @@
-const fs = require('node:fs');
-const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert');
-
-// Read worker.js
-const workerPath = path.join(__dirname, '..', 'worker.js');
-const workerContent = fs.readFileSync(workerPath, 'utf8');
-
-// Extract SecureBatchRNG class
-const rngClassMatch = workerContent.match(/class SecureBatchRNG \{[\s\S]*?\n\}/);
-if (!rngClassMatch) {
-    throw new Error('Could not find SecureBatchRNG class in worker.js');
-}
-const rngClassSource = rngClassMatch[0];
-
-// Helper to create the class with a mocked crypto
-function getSecureBatchRNGClass(mockCrypto) {
-    const factory = new Function('self', `
-        ${rngClassSource}
-        return SecureBatchRNG;
-    `);
-    return factory({ crypto: mockCrypto });
-}
+const { SecureBatchRNG } = require('../logic.js');
 
 test('SecureBatchRNG Boilerplate and Initialization', async (t) => {
     await t.test('should initialize with correct buffer size and index', () => {
-        const SecureBatchRNG = getSecureBatchRNGClass({ getRandomValues: () => {} });
-        const rng = new SecureBatchRNG();
+        const mockCrypto = { getRandomValues: () => {} };
+        const rng = new SecureBatchRNG(mockCrypto);
         assert.strictEqual(rng.BUFFER_SIZE, 128 * 1024);
         assert.strictEqual(rng.bitIndex, 0);
         assert.ok(rng.buffer instanceof Uint8Array);
@@ -43,8 +22,7 @@ test('SecureBatchRNG Refill Mechanism', async (t) => {
                 return view;
             }
         };
-        const SecureBatchRNG = getSecureBatchRNGClass(mockCrypto);
-        const rng = new SecureBatchRNG();
+        const rng = new SecureBatchRNG(mockCrypto);
 
         rng.refill();
 
@@ -61,21 +39,11 @@ test('SecureBatchRNG Bit Extraction', async (t) => {
     await t.test('should extract bits in Little Endian order from bytes', () => {
         const mockCrypto = {
             getRandomValues: (view) => {
-                // Fill first byte with 0b10101001 (0xA9)
-                // bit 0 (value 1) -> 1
-                // bit 1 (value 2) -> 0
-                // bit 2 (value 4) -> 0
-                // bit 3 (value 8) -> 1
-                // bit 4 (value 16) -> 0
-                // bit 5 (value 32) -> 1
-                // bit 6 (value 64) -> 0
-                // bit 7 (value 128) -> 1
                 view[0] = 0xA9;
                 return view;
             }
         };
-        const SecureBatchRNG = getSecureBatchRNGClass(mockCrypto);
-        const rng = new SecureBatchRNG();
+        const rng = new SecureBatchRNG(mockCrypto);
         rng.refill();
 
         const expectedBits = [1, 0, 0, 1, 0, 1, 0, 1];
@@ -92,8 +60,7 @@ test('SecureBatchRNG Bit Extraction', async (t) => {
                 return view;
             }
         };
-        const SecureBatchRNG = getSecureBatchRNGClass(mockCrypto);
-        const rng = new SecureBatchRNG();
+        const rng = new SecureBatchRNG(mockCrypto);
         rng.refill();
 
         assert.strictEqual(rng.getBit(), 1); // bit 0 of byte 0
@@ -113,8 +80,7 @@ test('SecureBatchRNG Edge Cases', async (t) => {
                 return view;
             }
         };
-        const SecureBatchRNG = getSecureBatchRNGClass(mockCrypto);
-        const rng = new SecureBatchRNG();
+        const rng = new SecureBatchRNG(mockCrypto);
 
         const totalBits = rng.BUFFER_SIZE * 8;
 

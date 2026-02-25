@@ -1,9 +1,4 @@
-// Constants
-const INITIAL_BANK = 1000;
-const BET_AMOUNT = 1;
-const PLAYER_COUNT = 1000;
-const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
-const MAX_TRACKED_ROUNDS = 100000;
+importScripts('logic.js');
 
 // State
 let players = [];
@@ -13,71 +8,7 @@ let simulationSpeed = 1000;
 let trackedHistory = {};
 let intervalId = null;
 
-// RNG
-class SecureBatchRNG {
-    constructor() {
-        this.BUFFER_SIZE = 128 * 1024;
-        this.buffer = new Uint8Array(this.BUFFER_SIZE);
-        this.bitIndex = 0;
-
-        // Pre-calculate chunks to avoid temporary views in refill()
-        this.views = [];
-        const CHUNK_SIZE = 65536;
-        for (let offset = 0; offset < this.BUFFER_SIZE; offset += CHUNK_SIZE) {
-            const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
-            this.views.push(this.buffer.subarray(offset, end));
-        }
-    }
-
-    refill() {
-        for (let i = 0; i < this.views.length; i++) {
-            self.crypto.getRandomValues(this.views[i]);
-        }
-        this.bitIndex = 0;
-    }
-
-    getBit() {
-        if (this.bitIndex >= this.BUFFER_SIZE * 8) {
-            this.refill();
-        }
-        const byteIndex = this.bitIndex >> 3;
-        const bitOffset = this.bitIndex & 7;
-        const bit = (this.buffer[byteIndex] >> bitOffset) & 1;
-        this.bitIndex++;
-        return bit;
-    }
-}
-
 const rng = new SecureBatchRNG();
-
-class Player {
-    constructor(id) {
-        this.id = id;
-        this.bank = INITIAL_BANK;
-        this.active = true;
-        this.maxBank = INITIAL_BANK;
-        this.ruinedAt = null;
-    }
-
-    play(coinSide) {
-        if (!this.active) return;
-
-        // rng is global in this scope
-        const choice = rng.getBit();
-
-        if (choice === coinSide) {
-            this.bank += BET_AMOUNT;
-            if (this.bank > this.maxBank) this.maxBank = this.bank;
-        } else {
-            this.bank -= BET_AMOUNT;
-            if (this.bank <= 0) {
-                this.bank = 0;
-                this.active = false;
-                this.ruinedAt = matchCount;
-            }
-        }
-    }
-}
 
 function initGame() {
     players = [];
@@ -103,7 +34,7 @@ function gameLoop() {
         matchCount++;
         const coinSide = rng.getBit();
         for (let j = 0; j < PLAYER_COUNT; j++) {
-            players[j].play(coinSide);
+            players[j].play(coinSide, rng, matchCount);
         }
 
         if (matchCount <= MAX_TRACKED_ROUNDS) {

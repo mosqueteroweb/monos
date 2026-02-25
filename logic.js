@@ -1,5 +1,22 @@
 // logic.js - Shared logic for Battle Royale simulation
 
+// Constants
+const INITIAL_BANK = 1000;
+const BET_AMOUNT = 1;
+const PLAYER_COUNT = 1000;
+const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
+const MAX_TRACKED_ROUNDS = 100000;
+
+const THRESHOLDS = {
+    RUINED: 0,
+    LOSING: 900,
+    NEUTRAL: 1099,
+    X2: 2000,
+    X3: 3000,
+    X5: 5000,
+    X10: 10000
+};
+
 const BANK_COLORS = {
     BLACK: '#000000', // Ruined
     ORANGE: '#ff9800', // Losing (<900)
@@ -17,14 +34,93 @@ const BANK_COLORS = {
  * @returns {string} Hex color
  */
 function getColor(bank) {
-    if (bank <= 0) return BANK_COLORS.BLACK;
-    if (bank <= 900) return BANK_COLORS.ORANGE;
-    if (bank <= 1099) return BANK_COLORS.YELLOW;
-    if (bank < 2000) return BANK_COLORS.GREEN_NORMAL;
-    if (bank < 3000) return BANK_COLORS.GREEN_HIGHLIGHT;
-    if (bank < 5000) return BANK_COLORS.BLUE;
-    if (bank < 10000) return BANK_COLORS.RED;
+    if (bank <= THRESHOLDS.RUINED) return BANK_COLORS.BLACK;
+    if (bank <= THRESHOLDS.LOSING) return BANK_COLORS.ORANGE;
+    if (bank <= THRESHOLDS.NEUTRAL) return BANK_COLORS.YELLOW;
+    if (bank < THRESHOLDS.X2) return BANK_COLORS.GREEN_NORMAL;
+    if (bank < THRESHOLDS.X3) return BANK_COLORS.GREEN_HIGHLIGHT;
+    if (bank < THRESHOLDS.X5) return BANK_COLORS.BLUE;
+    if (bank < THRESHOLDS.X10) return BANK_COLORS.RED;
     return BANK_COLORS.FUCHSIA;
+}
+
+class SecureBatchRNG {
+    constructor(cryptoImpl) {
+        this.BUFFER_SIZE = 128 * 1024;
+        this.buffer = new Uint8Array(this.BUFFER_SIZE);
+        this.bitIndex = 0;
+
+        // Pre-calculate chunks to avoid temporary views in refill()
+        this.views = [];
+        const CHUNK_SIZE = 65536;
+        for (let offset = 0; offset < this.BUFFER_SIZE; offset += CHUNK_SIZE) {
+            const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
+            this.views.push(this.buffer.subarray(offset, end));
+        }
+
+        // Determine crypto implementation
+        if (cryptoImpl) {
+            this.crypto = cryptoImpl;
+        } else if (typeof crypto !== 'undefined') {
+             this.crypto = crypto;
+        } else if (typeof window !== 'undefined' && window.crypto) {
+             this.crypto = window.crypto;
+        } else if (typeof self !== 'undefined' && self.crypto) {
+             this.crypto = self.crypto;
+        }
+    }
+
+    refill() {
+        if (!this.crypto) {
+             // Fallback or error if crypto not available
+             // For tests we might mock it via constructor or property injection
+             return;
+        }
+        for (let i = 0; i < this.views.length; i++) {
+            this.crypto.getRandomValues(this.views[i]);
+        }
+        this.bitIndex = 0;
+    }
+
+    getBit() {
+        if (this.bitIndex >= this.BUFFER_SIZE * 8) {
+            this.refill();
+        }
+        const byteIndex = this.bitIndex >> 3;
+        const bitOffset = this.bitIndex & 7;
+        const bit = (this.buffer[byteIndex] >> bitOffset) & 1;
+        this.bitIndex++;
+        return bit;
+    }
+}
+
+class Player {
+    constructor(id) {
+        this.id = id;
+        this.bank = INITIAL_BANK;
+        this.visualBank = INITIAL_BANK; // Smooth transitions
+        this.active = true;
+        this.maxBank = INITIAL_BANK;
+        this.ruinedAt = null;
+    }
+
+    play(coinSide, rng, currentMatchCount) {
+        if (!this.active) return;
+
+        const choice = rng.getBit();
+
+        if (choice === coinSide) {
+            this.bank += BET_AMOUNT;
+            if (this.bank > this.maxBank) this.maxBank = this.bank;
+        } else {
+            this.bank -= BET_AMOUNT;
+            if (this.bank <= 0) {
+                this.bank = 0;
+                this.active = false;
+                this.ruinedAt = currentMatchCount;
+            }
+        }
+    }
 }
 
 /**
@@ -63,8 +159,16 @@ function updateLocalPlayers(workerPlayers, localPlayers) {
 // Export for Node.js tests
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        INITIAL_BANK,
+        BET_AMOUNT,
+        PLAYER_COUNT,
+        TRACKED_PLAYER_IDS,
+        MAX_TRACKED_ROUNDS,
+        THRESHOLDS,
         BANK_COLORS,
         getColor,
-        updateLocalPlayers
+        updateLocalPlayers,
+        SecureBatchRNG,
+        Player
     };
 }

@@ -1,7 +1,0 @@
-127.0.0.1 - - [25/Feb/2026 19:50:23] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [25/Feb/2026 19:50:23] "GET /logic.js HTTP/1.1" 200 -
-127.0.0.1 - - [25/Feb/2026 19:50:24] "GET /seguimiento.html?from=index.html HTTP/1.1" 200 -
-127.0.0.1 - - [25/Feb/2026 19:50:25] "GET /webworker.html HTTP/1.1" 200 -
-127.0.0.1 - - [25/Feb/2026 19:50:25] "GET /ui.js HTTP/1.1" 200 -
-127.0.0.1 - - [25/Feb/2026 19:50:25] "GET /worker.js HTTP/1.1" 200 -
-127.0.0.1 - - [25/Feb/2026 19:50:25] "GET /seguimiento.html?from=webworker.html HTTP/1.1" 200 -
