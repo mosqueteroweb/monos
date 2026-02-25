@@ -48,7 +48,7 @@ worker.onmessage = function(e) {
     const data = e.data;
     if (data.type === 'UPDATE') {
         matchCount = data.matchCount;
-        updateLocalPlayers(data.players);
+        localPlayers = updateLocalPlayers(data.players, localPlayers);
 
         const now = performance.now();
         if (now - lastUITime > 66) {
@@ -72,29 +72,6 @@ worker.onmessage = function(e) {
     }
 };
 
-function updateLocalPlayers(workerPlayers) {
-    if (localPlayers.length === 0) {
-        // Initialize
-        localPlayers = workerPlayers.map(p => ({
-            id: p.id,
-            bank: p.bank,
-            visualBank: p.bank,
-            active: p.active,
-            ruinedAt: p.ruinedAt,
-            maxBank: p.maxBank
-        }));
-    } else {
-        // Update existing
-        for (let i = 0; i < localPlayers.length; i++) {
-            const wp = workerPlayers[i];
-            const lp = localPlayers[i];
-            lp.bank = wp.bank;
-            lp.active = wp.active;
-            lp.ruinedAt = wp.ruinedAt;
-            lp.maxBank = wp.maxBank;
-        }
-    }
-}
 
 function toggleGame() {
     isPlaying = !isPlaying;

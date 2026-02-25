@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { getColor, BANK_COLORS } = require('../logic.js');
+const { getColor } = require('../logic.js');
 
 test('getColor Unit Tests (Updated Palette)', async (t) => {
     // 1. Arruinados (<= 0): Negro (#000000)
