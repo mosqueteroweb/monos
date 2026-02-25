@@ -98,8 +98,6 @@ function initGame() {
 function gameLoop() {
     if (!isPlaying) return;
 
-    rng.refill();
-
     // Run simulation steps
     for (let i = 0; i < simulationSpeed; i++) {
         matchCount++;
