@@ -125,8 +125,15 @@
     const ctx = document.getElementById('trackingChart').getContext('2d');
 
     // Navigation
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromPage = urlParams.get('from');
+
     backBtn.addEventListener('click', () => {
-        window.location.href = 'index.html';
+        if (fromPage === 'webworker.html') {
+            window.location.href = 'webworker.html';
+        } else {
+            window.location.href = 'index.html';
+        }
     });
 
     // Load Data
