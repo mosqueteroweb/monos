@@ -3,22 +3,22 @@ const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert');
 
-// Read index.html
-const indexPath = path.join(__dirname, '..', 'index.html');
-const indexContent = fs.readFileSync(indexPath, 'utf8');
+// Read game.js
+const gamePath = path.join(__dirname, '..', 'game.js');
+const gameContent = fs.readFileSync(gamePath, 'utf8');
 
 // Extract getColor function using regex
 // This regex looks for the function getColor(bank) { ... }
-const getColorMatch = indexContent.match(/function getColor\(bank\) \{[\s\S]*?\n\s*?\}/);
+const getColorMatch = gameContent.match(/function getColor\(bank\) \{[\s\S]*?\n\s*?\}/);
 
 if (!getColorMatch) {
-    throw new Error('Could not find getColor function in index.html');
+    throw new Error('Could not find getColor function in game.js');
 }
 
 // Extract BANK_COLORS
-const bankColorsMatch = indexContent.match(/const BANK_COLORS = \{[\s\S]*?\};/);
+const bankColorsMatch = gameContent.match(/const BANK_COLORS = \{[\s\S]*?\};/);
 if (!bankColorsMatch) {
-    throw new Error('Could not find BANK_COLORS constant in index.html');
+    throw new Error('Could not find BANK_COLORS constant in game.js');
 }
 
 const getColorSource = getColorMatch[0];

@@ -26,6 +26,7 @@ let isPlaying = false;
 let animationId;
 let lastUITime = 0;
 let trackedHistory = {};
+let canvasRect = null;
 
 // DOM Elements
 const canvas = document.getElementById("gameCanvas");
@@ -308,18 +309,24 @@ function draw() {
   }
 }
 
+function updateCanvasRect() {
+  canvasRect = canvas.getBoundingClientRect();
+}
+
 function resizeCanvas() {
   const parent = canvas.parentElement;
   if (parent.clientWidth > 0 && parent.clientHeight > 0) {
     canvas.width = parent.clientWidth;
     canvas.height = parent.clientHeight;
+    updateCanvasRect();
     draw();
   }
 }
 
 // Interaction
 function handleInteraction(clientX, clientY) {
-  const rect = canvas.getBoundingClientRect();
+  if (!canvasRect) updateCanvasRect();
+  const rect = canvasRect;
   const mouseX = clientX - rect.left;
   const mouseY = clientY - rect.top;
 
@@ -406,6 +413,7 @@ statsBtn.addEventListener("click", () => {
 });
 
 window.addEventListener("resize", resizeCanvas);
+window.addEventListener("scroll", updateCanvasRect, { passive: true });
 
 // Init
 initGame();
