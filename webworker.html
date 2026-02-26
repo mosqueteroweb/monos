@@ -3,271 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:;" />
     <title>Battle Royale: Cara o Cruz (Web Worker)</title>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --accent-color: #bb86fc;
-            --success-color: #00e676; /* Neon Green */
-            --warning-color: #ffea00;
-            --danger-color: #ff1744;
-            --ruined-color: #37474f; /* Dark Grey */
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* HEADER */
-        header {
-            background-color: var(--surface-color);
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            z-index: 100;
-            flex-shrink: 0;
-        }
-
-        h1 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .back-link {
-            font-size: 0.8rem;
-            text-decoration: none;
-            color: var(--text-secondary);
-            border: 1px solid #444;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .back-link:hover {
-            color: var(--text-primary);
-            border-color: var(--text-primary);
-        }
-
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        /* SLIDER */
-        .slider-container {
-            display: flex;
-            align-items: center;
-            width: 100px;
-        }
-
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 14px;
-            width: 14px;
-            border-radius: 50%;
-            background: var(--text-primary);
-            cursor: pointer;
-            margin-top: -5px;
-        }
-
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #444;
-            border-radius: 2px;
-        }
-
-        /* BUTTONS */
-        .btn-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        button {
-            background: #2c2c2c;
-            border: 1px solid #444;
-            color: var(--text-primary);
-            border-radius: 6px;
-            padding: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            width: 36px;
-            height: 36px;
-        }
-
-        button:hover {
-            background: #3d3d3d;
-            border-color: #666;
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        button svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        button.active {
-             background: var(--accent-color);
-             color: #000;
-             border-color: var(--accent-color);
-        }
-
-        /* MAIN CONTENT */
-        main {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #gameCanvas {
-            flex: 1;
-            width: 100%;
-            display: block;
-            background-color: #000;
-        }
-
-        /* STATS PANEL (Bottom) */
-        #statsPanel {
-            background-color: var(--surface-color);
-            border-top: 1px solid #333;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            /* Scrollable if content overflows on small screens */
-            overflow-y: auto;
-            max-height: 40vh;
-            flex-shrink: 0;
-        }
-
-        .stats-header {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 5px;
-        }
-
-        .match-counter {
-            font-size: 1.2rem;
-            color: var(--success-color);
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-        }
-
-        .money-counter {
-            font-size: 1.1rem;
-            color: var(--accent-color);
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            margin-right: 15px;
-        }
-
-        /* PROGRESS BAR */
-        .progress-container {
-            width: 100%;
-            height: 12px;
-            background-color: #333;
-            border-radius: 6px;
-            overflow: hidden;
-            display: flex;
-        }
-
-        .progress-bar {
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-
-        .pb-ruined { background-color: #37474f; }
-        .pb-losing { background-color: #ff9800; }
-        .pb-neutral { background-color: #ffeb3b; }
-        .pb-winning { background-color: #4caf50; }
-
-        /* STATS GRID */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-secondary);
-        }
-
-        .stat-value {
-            color: var(--text-primary);
-            font-weight: bold;
-            margin-left: auto;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        /* TOOLTIP */
-        #tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #444;
-            color: #fff;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            pointer-events: none;
-            display: none;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 600px) {
-            h1 { font-size: 0.9rem; }
-            .slider-container { width: 70px; }
-            button { width: 32px; height: 32px; }
-            #statsPanel { padding: 10px; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
@@ -286,7 +24,7 @@
                 <!-- Play Icon -->
                 <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                 <!-- Pause Icon (hidden by default) -->
-                <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                <svg id="icon-pause" viewBox="0 0 24 24" class="hidden"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
             </button>
             <button id="resetBtn" title="Reiniciar">
                 <!-- Reset Icon -->
@@ -311,21 +49,21 @@
     </div>
 
     <div class="progress-container">
-        <div id="pb-ruined" class="progress-bar pb-ruined" style="width: 0%"></div>
-        <div id="pb-losing" class="progress-bar pb-losing" style="width: 0%"></div>
-        <div id="pb-neutral" class="progress-bar pb-neutral" style="width: 100%"></div>
-        <div id="pb-winning" class="progress-bar pb-winning" style="width: 0%"></div>
+        <div id="pb-ruined" class="progress-bar pb-ruined"></div>
+        <div id="pb-losing" class="progress-bar pb-losing"></div>
+        <div id="pb-neutral" class="progress-bar pb-neutral"></div>
+        <div id="pb-winning" class="progress-bar pb-winning"></div>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-item"><span class="dot" style="background:#37474f"></span>Arruinados (0€)<span class="stat-value" id="stat-ruined">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#ff9800"></span>Perdiendo (<900)<span class="stat-value" id="stat-losing">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#ffeb3b"></span>Neutro (900-1100)<span class="stat-value" id="stat-neutral">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#4caf50"></span>Ganando (>1100)<span class="stat-value" id="stat-winning">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#00e676"></span>x2 (>2k)<span class="stat-value" id="stat-x2">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#2196f3"></span>x3 (>3k)<span class="stat-value" id="stat-x3">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#f44336"></span>x5 (>5k)<span class="stat-value" id="stat-x5">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#ff00ff"></span>x10 (>10k)<span class="stat-value" id="stat-x10">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot dot-ruined"></span>Arruinados (0€)<span class="stat-value" id="stat-ruined">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot dot-losing"></span>Perdiendo (<900)<span class="stat-value" id="stat-losing">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot dot-neutral"></span>Neutro (900-1100)<span class="stat-value" id="stat-neutral">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot dot-winning"></span>Ganando (>1100)<span class="stat-value" id="stat-winning">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot dot-x2"></span>x2 (>2k)<span class="stat-value" id="stat-x2">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot dot-x3"></span>x3 (>3k)<span class="stat-value" id="stat-x3">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot dot-x5"></span>x5 (>5k)<span class="stat-value" id="stat-x5">0 (0%)</span></div>
+        <div class="stat-item"><span class="dot dot-x10"></span>x10 (>10k)<span class="stat-value" id="stat-x10">0 (0%)</span></div>
     </div>
 </div>
 
