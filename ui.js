@@ -60,7 +60,7 @@ worker.onmessage = function(e) {
     const data = e.data;
     if (data.type === 'UPDATE') {
         matchCount = data.matchCount;
-        updateLocalPlayers(data.players);
+        updateLocalPlayers(data);
 
         const now = performance.now();
         if (now - lastUITime > 66) {
@@ -76,7 +76,7 @@ worker.onmessage = function(e) {
         };
         try {
             localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
-            window.location.href = 'seguimiento.html';
+            window.location.href = 'seguimiento.html?from=webworker.html';
         } catch (err) {
             console.error("Error saving stats:", err);
             alert("Error al guardar datos de seguimiento.");
@@ -84,26 +84,31 @@ worker.onmessage = function(e) {
     }
 };
 
-function updateLocalPlayers(workerPlayers) {
+function updateLocalPlayers(data) {
+    const { banks, maxBanks, ruinedAts } = data;
+    const count = banks.length;
+
     if (localPlayers.length === 0) {
         // Initialize
-        localPlayers = workerPlayers.map(p => ({
-            id: p.id,
-            bank: p.bank,
-            visualBank: p.bank,
-            active: p.active,
-            ruinedAt: p.ruinedAt,
-            maxBank: p.maxBank
-        }));
+        localPlayers = new Array(count);
+        for (let i = 0; i < count; i++) {
+            localPlayers[i] = {
+                id: i,
+                bank: banks[i],
+                visualBank: banks[i],
+                active: banks[i] > 0,
+                ruinedAt: ruinedAts[i],
+                maxBank: maxBanks[i]
+            };
+        }
     } else {
         // Update existing
-        for (let i = 0; i < localPlayers.length; i++) {
-            const wp = workerPlayers[i];
+        for (let i = 0; i < count; i++) {
             const lp = localPlayers[i];
-            lp.bank = wp.bank;
-            lp.active = wp.active;
-            lp.ruinedAt = wp.ruinedAt;
-            lp.maxBank = wp.maxBank;
+            lp.bank = banks[i];
+            lp.active = banks[i] > 0;
+            lp.ruinedAt = ruinedAts[i];
+            lp.maxBank = maxBanks[i];
         }
     }
 }
