@@ -1,562 +1,575 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Monos: Ciclo de 10s</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', sans-serif;
-        }
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #121212;
+        color: #e0e0e0;
+        font-family: "Segoe UI", sans-serif;
+      }
 
-        /* Header Arriba */
-        header {
-            width: 100%;
-            background-color: #1e1e24;
-            padding: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      /* Header Arriba */
+      header {
+        width: 100%;
+        background-color: #1e1e24;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-        .header-left h1 {
-            margin: 0;
-            color: #00ff88;
-            font-size: 2rem;
-        }
+      .header-left h1 {
+        margin: 0;
+        color: #00ff88;
+        font-size: 2rem;
+      }
 
-        .header-right {
-            display: flex;
-            gap: 30px;
-        }
+      .header-right {
+        display: flex;
+        gap: 30px;
+      }
 
-        .stat-item {
-            background-color: #2a2a35;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
+      .stat-item {
+        background-color: #2a2a35;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
 
-        .stat-label {
-            font-size: 0.8rem;
-            color: #888;
-            display: block;
-        }
+      .stat-label {
+        font-size: 0.8rem;
+        color: #888;
+        display: block;
+      }
 
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #fff;
-            font-family: monospace;
-        }
+      .stat-value {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #fff;
+        font-family: monospace;
+      }
 
-        .stat-value.red {
-            color: #ff4444;
-        }
+      .stat-value.red {
+        color: #ff4444;
+      }
 
-        /* Botones */
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 30px;
-        }
+      /* Botones */
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 30px;
+      }
 
-        button {
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: transform 0.1s;
-        }
+      button {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: transform 0.1s;
+      }
 
-        #btn-start {
-            background-color: #238636;
-            color: white;
-        }
+      #btn-start {
+        background-color: #238636;
+        color: white;
+      }
 
-        #btn-start:hover {
-            background-color: #2ea043;
-            transform: scale(1.05);
-        }
+      #btn-start:hover {
+        background-color: #2ea043;
+        transform: scale(1.05);
+      }
 
-        #btn-start:disabled {
-            background-color: #3a3d41;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
+      #btn-start:disabled {
+        background-color: #3a3d41;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
 
-        #btn-stop {
-            background-color: #da3633;
-            color: white;
-        }
+      #btn-stop {
+        background-color: #da3633;
+        color: white;
+      }
 
-        #btn-stop:hover {
-            background-color: #f85149;
-            transform: scale(1.05);
-        }
+      #btn-stop:hover {
+        background-color: #f85149;
+        transform: scale(1.05);
+      }
 
-        #btn-stop:disabled {
-            background-color: #3a3d41;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
+      #btn-stop:disabled {
+        background-color: #3a3d41;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
 
-        /* Barra de Estado */
-        .status-bar {
-            width: 90%;
-            max-width: 800px;
-            height: 40px;
-            background-color: #000;
-            border-bottom: 1px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 20px;
-        }
+      /* Barra de Estado */
+      .status-bar {
+        width: 90%;
+        max-width: 800px;
+        height: 40px;
+        background-color: #000;
+        border-bottom: 1px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+      }
 
-        .status-text {
-            font-size: 1.3rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
+      .status-text {
+        font-size: 1.3rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
 
-        /* Grid de Monos */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 15px;
-            padding: 20px;
-            width: 90%;
-            max-width: 1000px;
-        }
+      /* Grid de Monos */
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 15px;
+        padding: 20px;
+        width: 90%;
+        max-width: 1000px;
+      }
 
-        .monkey-card {
-            background-color: #2a2a35;
-            border-radius: 10px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            min-height: 100px;
-            transition: all 0.3s ease;
-            position: relative;
-            border: 2px solid #444;
-        }
+      .monkey-card {
+        background-color: #2a2a35;
+        border-radius: 10px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 100px;
+        transition: all 0.3s ease;
+        position: relative;
+        border: 2px solid #444;
+      }
 
-        /* Clases de Color (Los bordes cambian según el saldo) */
-        .c-10000 {
-            border-color: #ff00ff;
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
-        }
+      /* Clases de Color (Los bordes cambian según el saldo) */
+      .c-10000 {
+        border-color: #ff00ff;
+        box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
+      }
 
-        /* Fuchsia */
-        .c-5000 {
-            border-color: #8b00ff;
-            box-shadow: 0 0 15px rgba(139, 0, 255, 0.4);
-        }
+      /* Fuchsia */
+      .c-5000 {
+        border-color: #8b00ff;
+        box-shadow: 0 0 15px rgba(139, 0, 255, 0.4);
+      }
 
-        /* Morado */
-        .c-2000 {
-            border-color: #00bfff;
-            box-shadow: 0 0 15px rgba(0, 191, 255, 0.4);
-        }
+      /* Morado */
+      .c-2000 {
+        border-color: #00bfff;
+        box-shadow: 0 0 15px rgba(0, 191, 255, 0.4);
+      }
 
-        /* Azul */
-        .c-1500 {
-            border-color: #7cfc00;
-            box-shadow: 0 0 15px rgba(124, 252, 0, 0.4);
-        }
+      /* Azul */
+      .c-1500 {
+        border-color: #7cfc00;
+        box-shadow: 0 0 15px rgba(124, 252, 0, 0.4);
+      }
 
-        /* Verde Brillo */
-        .c-1100 {
-            border-color: #90ee90;
-            box-shadow: 0 0 15px rgba(144, 238, 144, 0.4);
-        }
+      /* Verde Brillo */
+      .c-1100 {
+        border-color: #90ee90;
+        box-shadow: 0 0 15px rgba(144, 238, 144, 0.4);
+      }
 
-        /* Verde Claro */
-        .c-900 {
-            border-color: #ffff00;
-            box-shadow: 0 0 15px rgba(255, 255, 0, 0.4);
-        }
+      /* Verde Claro */
+      .c-900 {
+        border-color: #ffff00;
+        box-shadow: 0 0 15px rgba(255, 255, 0, 0.4);
+      }
 
-        /* Amarillo */
-        .c-300 {
-            border-color: #ff8c00;
-            box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
-        }
+      /* Amarillo */
+      .c-300 {
+        border-color: #ff8c00;
+        box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
+      }
 
-        /* Naranja */
-        .c-0 {
-            background-color: #000;
-            border-color: #333 !important;
-            box-shadow: none !important;
-        }
+      /* Naranja */
+      .c-0 {
+        background-color: #000;
+        border-color: #333 !important;
+        box-shadow: none !important;
+      }
 
-        /* Muerto */
-        .c-0 .monkey-emoji {
-            opacity: 0.3;
-        }
+      /* Muerto */
+      .c-0 .monkey-emoji {
+        opacity: 0.3;
+      }
 
-        /* Animación de Gana/Pierde */
-        .anim-win {
-            border-color: #00ff88 !important;
-            box-shadow: 0 0 30px #00ff88 !important;
-            transform: scale(1.2);
-            z-index: 100;
-        }
+      /* Animación de Gana/Pierde */
+      .anim-win {
+        border-color: #00ff88 !important;
+        box-shadow: 0 0 30px #00ff88 !important;
+        transform: scale(1.2);
+        z-index: 100;
+      }
 
-        .anim-lose {
-            border-color: #ff4444 !important;
-            box-shadow: 0 0 30px #ff4444 !important;
-            transform: scale(0.9);
-            opacity: 0.6;
-        }
+      .anim-lose {
+        border-color: #ff4444 !important;
+        box-shadow: 0 0 30px #ff4444 !important;
+        transform: scale(0.9);
+        opacity: 0.6;
+      }
 
-        .monkey-emoji {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            transition: transform 0.3s;
-        }
+      .monkey-emoji {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        transition: transform 0.3s;
+      }
 
-        .monkey-id {
-            font-size: 0.7rem;
-            color: #888;
-            margin-bottom: auto;
-        }
+      .monkey-id {
+        font-size: 0.7rem;
+        color: #888;
+        margin-bottom: auto;
+      }
 
-        .monkey-balance {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 5px;
-        }
+      .monkey-balance {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 5px;
+      }
 
-        .monkey-dead-msg {
-            font-size: 0.8rem;
-            color: #ff4444;
-            font-weight: bold;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 2px;
-            border-radius: 4px;
-            min-height: 1.5em;
-        }
+      .monkey-dead-msg {
+        font-size: 0.8rem;
+        color: #ff4444;
+        font-weight: bold;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 2px;
+        border-radius: 4px;
+        min-height: 1.5em;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <header>
-        <div class="header-left">
-            <h1>Coliseo de Monos</h1>
+      <div class="header-left">
+        <h1>Coliseo de Monos</h1>
+      </div>
+      <div class="header-right">
+        <div class="stat-item">
+          <span class="stat-label">Partidas Totales</span>
+          <span id="total-bets" class="stat-value">0</span>
         </div>
-        <div class="header-right">
-            <div class="stat-item">
-                <span class="stat-label">Partidas Totales</span>
-                <span id="total-bets" class="stat-value">0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Monos Vivos</span>
-                <span id="alive-count" class="stat-value">100</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Ronda Actual</span>
-                <span id="round-count" class="stat-value">0</span>
-            </div>
+        <div class="stat-item">
+          <span class="stat-label">Monos Vivos</span>
+          <span id="alive-count" class="stat-value">100</span>
         </div>
+        <div class="stat-item">
+          <span class="stat-label">Ronda Actual</span>
+          <span id="round-count" class="stat-value">0</span>
+        </div>
+      </div>
     </header>
 
     <div class="controls">
-        <button type="button" id="btn-start" onclick="startGame()">▶ INICIAR SIMULACIÓN</button>
-        <button type="button" id="btn-stop" onclick="stopGame()" disabled>⏸ DETENER</button>
+      <button type="button" id="btn-start" onclick="startGame()">
+        ▶ INICIAR SIMULACIÓN
+      </button>
+      <button type="button" id="btn-stop" onclick="stopGame()" disabled>
+        ⏸ DETENER
+      </button>
     </div>
 
     <div class="status-bar">
-        <span id="system-status" class="status-text">Esperando Inicio...</span>
+      <span id="system-status" class="status-text">Esperando Inicio...</span>
     </div>
 
     <div class="grid-container" id="monkey-grid">
-        <!-- Los 100 monos se generan aquí -->
+      <!-- Los 100 monos se generan aquí -->
     </div>
 
     <script>
-        // Configuración
-        const INITIAL_BALANCE = 1000;
-        const TOTAL_MONKEYS = 100;
-        const TIME_PER_ROUND_MS = 10000; // 10 segundos
-        const PAUSE_TIME_MS = 2500;      // 2.5 segundos para ver resultados
+      // Configuración (MODO ACELERADO 500k/3s)
+      const INITIAL_BALANCE = 1000;
+      const TOTAL_MONKEYS = 100;
+      const TIME_PER_ROUND_MS = 3000;  // 3 segundos de cálculo
+      const PAUSE_TIME_MS = 1000;      // 1 segundo de pausa visual
+      const TARGET_BETS_PER_ROUND = 500000;
 
-        // Variables Globales
-        let monkeys = [];
-        let totalBetsCounter = 0;
-        let roundNumber = 0;
-        let isPlaying = false;
-        let animationTimer = null;
+      // Variables Globales
+      let monkeys = [];
+      let totalBetsCounter = 0;
+      let roundNumber = 0;
+      let isPlaying = false;
+      let animationTimer = null;
 
-        // Elementos DOM
-        const btnStart = document.getElementById('btn-start');
-        const btnStop = document.getElementById('btn-stop');
-        const elStatus = document.getElementById('system-status');
-        const gridEl = document.getElementById('monkey-grid');
-        const elTotalBets = document.getElementById('total-bets');
-        const elAliveCount = document.getElementById('alive-count');
-        const elRoundCount = document.getElementById('round-count');
+      // Elementos DOM
+      const btnStart = document.getElementById("btn-start");
+      const btnStop = document.getElementById("btn-stop");
+      const elStatus = document.getElementById("system-status");
+      const gridEl = document.getElementById("monkey-grid");
+      const elTotalBets = document.getElementById("total-bets");
+      const elAliveCount = document.getElementById("alive-count");
+      const elRoundCount = document.getElementById("round-count");
 
-        // Función para obtener clase de color según saldo
-        function getColorClass(balance) {
-            if (balance === 0) return 'c-0';
-            if (balance > 10000) return 'c-10000';
-            if (balance > 5000) return 'c-5000';
-            if (balance > 2000) return 'c-2000';
-            if (balance > 1500) return 'c-1500';
-            if (balance >= 1100) return 'c-1100';
-            if (balance >= 900) return 'c-900';
-            if (balance >= 300) return 'c-300';
-            // Si está entre 1 y 299, visualmente es igual que "c-300" o "c-0" (muerto), 
-            // pero para usar la lógica de colores dada, usamos naranja hasta 300.
-            // Si cae por debajo de 1 (aunque la lógica lo para en 0), lo consideramos muerto.
-            return balance > 0 ? 'c-300' : 'c-0';
-        }
+      // Función unificada para visuales (Color y Emoji)
+      function getMonkeyVisuals(balance) {
+        if (balance <= 0) return { className: "c-0", emoji: "💀" };
+        if (balance > 10000) return { className: "c-10000", emoji: "🚀" };
+        if (balance > 5000) return { className: "c-5000", emoji: "👑" };
+        if (balance > 2000) return { className: "c-2000", emoji: "🤑" };
+        if (balance > 1500) return { className: "c-1500", emoji: "😀" };
+        if (balance >= 1100) return { className: "c-1100", emoji: "🙂" };
+        if (balance >= 900) return { className: "c-900", emoji: "🐵" };
+        if (balance >= 300) return { className: "c-300", emoji: "😨" };
+        return { className: "c-300", emoji: "😭" };
+      }
 
-        // Inicializar Monos
-        function initMonkeys() {
-            gridEl.innerHTML = '';
-            monkeys = [];
+      // Inicializar Monos
+      function initMonkeys() {
+        gridEl.innerHTML = "";
+        monkeys = [];
 
-            for (let i = 0; i < TOTAL_MONKEYS; i++) {
-                const monkeyData = {
-                    id: i,
-                    balance: INITIAL_BALANCE,
-                    isDead: false,
-                    deadRound: null
-                };
-                monkeys.push(monkeyData);
+        for (let i = 0; i < TOTAL_MONKEYS; i++) {
+          const monkeyData = {
+            id: i,
+            balance: INITIAL_BALANCE,
+            isDead: false,
+            deadRound: null,
+          };
+          monkeys.push(monkeyData);
 
-                const card = document.createElement('div');
-                card.className = 'monkey-card';
-                card.id = `card-${i}`;
+          const card = document.createElement("div");
+          card.className = "monkey-card";
+          card.id = `card-${i}`;
 
-                // Asignar emoji fijo (ya no cambian sin sentido)
-                const randomEmoji = '🐵';
+          const visuals = getMonkeyVisuals(INITIAL_BALANCE);
 
-                card.innerHTML = `
-                    <div class="monkey-emoji" id="face-${i}">${randomEmoji}</div>
+          card.innerHTML = `
+                    <div class="monkey-emoji" id="face-${i}">${visuals.emoji}</div>
                     <div class="monkey-id">Mono #${i + 1}</div>
                     <div class="monkey-balance" id="bal-${i}">€${INITIAL_BALANCE.toLocaleString()}</div>
                     <div class="monkey-dead-msg" id="msg-${i}"></div>
                 `;
 
-                gridEl.appendChild(card);
-            }
-
-            updateUI();
+          gridEl.appendChild(card);
+          // Establecer clase inicial
+          card.classList.add(visuals.className);
         }
 
-        function updateUI() {
-            // Actualizar contador de partidas (con formatos de miles)
-            elTotalBets.textContent = totalBetsCounter.toLocaleString();
+        updateUI();
+      }
 
-            // Contar vivos
-            const alive = monkeys.filter(m => !m.isDead).length;
-            elAliveCount.textContent = alive;
+      function updateUI() {
+        // Actualizar contador de partidas (con formatos de miles)
+        elTotalBets.textContent = totalBetsCounter.toLocaleString();
 
-            if (alive === 0) {
-                stopGame();
-                elStatus.textContent = "EXTINCIÓN TOTAL - No quedan monos";
-            }
+        // Contar vivos
+        const alive = monkeys.filter((m) => !m.isDead).length;
+        elAliveCount.textContent = alive;
+
+        if (alive === 0) {
+          stopGame();
+          elStatus.textContent = "EXTINCIÓN TOTAL - No quedan monos";
         }
+      }
 
-        function setEmoji(monkeyId, emoji) {
-            const el = document.getElementById(`face-${monkeyId}`);
-            if (el) el.textContent = emoji;
+      function setBalance(monkeyId, amount) {
+        const el = document.getElementById(`bal-${monkeyId}`);
+        if (el) {
+          el.textContent = `€${amount.toLocaleString()}`;
+
+          const card = document.getElementById(`card-${monkeyId}`);
+          const face = document.getElementById(`face-${monkeyId}`);
+          const msg = document.getElementById(`msg-${monkeyId}`);
+
+          const visuals = getMonkeyVisuals(amount);
+
+          // Actualizar emoji
+          face.textContent = visuals.emoji;
+
+          // Remover clases de color anteriores
+          const classesToRemove = [
+            "c-10000",
+            "c-5000",
+            "c-2000",
+            "c-1500",
+            "c-1100",
+            "c-900",
+            "c-300",
+            "c-0",
+          ];
+          classesToRemove.forEach((c) => card.classList.remove(c));
+
+          // Añadir nueva clase
+          card.classList.add(visuals.className);
+
+          if (amount <= 0) {
+            msg.textContent = "FALLIDO";
+          } else {
+            msg.textContent = "";
+          }
         }
+      }
 
-        function setBalance(monkeyId, amount) {
-            const el = document.getElementById(`bal-${monkeyId}`);
-            if (el) {
-                el.textContent = `€${amount.toLocaleString()}`;
+      function setStatus(text, type) {
+        elStatus.textContent = text;
+        if (type === "play") elStatus.style.color = "#00ff88";
+        else if (type === "pause") elStatus.style.color = "#ff4444";
+        else elStatus.style.color = "#fff";
+      }
 
-                // Actualizar Clase de Color (Borde)
-                const card = document.getElementById(`card-${monkeyId}`);
-                // Remover clases de color anteriores
-                const classesToRemove = ['c-10000', 'c-5000', 'c-2000', 'c-1500', 'c-1100', 'c-900', 'c-300', 'c-0'];
-                classesToRemove.forEach(c => card.classList.remove(c));
+      // Lógica Principal
+      function startGame() {
+        if (isPlaying) return;
 
-                if (amount > 0) {
-                    const newClass = getColorClass(amount);
-                    card.classList.add(newClass);
+        isPlaying = true;
+        btnStart.disabled = true;
+        btnStop.disabled = false;
 
-                    // Resetear texto si estaba muerto y recupera dinero ( improbable pero posible por errores de redondeo)
-                    document.getElementById(`msg-${monkeyId}`).textContent = "";
+        playRounds();
+      }
+
+      function stopGame() {
+        isPlaying = false;
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+        elStatus.textContent = "Sistema Detenido";
+      }
+
+      function playRounds() {
+        if (!isPlaying) return;
+
+        roundNumber++;
+        elRoundCount.textContent = roundNumber;
+
+        setStatus(
+          `JUGANDO RONDA #${roundNumber}... (Simulando 500k apuestas)`,
+          "play",
+        );
+
+        let startTime = Date.now();
+        let roundBetsCount = 0;
+
+        // Intervalo de 16ms
+        let simulationTimer = setInterval(() => {
+          if (!isPlaying) {
+            clearInterval(simulationTimer);
+            return;
+          }
+
+          const currentTime = Date.now();
+          const elapsedTime = currentTime - startTime;
+
+          // Si llegamos a la meta de apuestas O al tiempo límite (3s)
+          if (
+            roundBetsCount >= TARGET_BETS_PER_ROUND ||
+            elapsedTime >= TIME_PER_ROUND_MS
+          ) {
+            clearInterval(simulationTimer);
+            showResults(roundBetsCount);
+            return;
+          }
+
+          // CALIBRACIÓN DE VELOCIDAD
+          // Objetivo: 500,000 apuestas en 3000ms
+          // ~166,666 por segundo -> ~2777 por frame (a 60fps)
+          // Cada bucle interno hace TOTAL_MONKEYS (100) apuestas
+          // Necesitamos SPEED_MULTIPLIER ≈ 28
+          const SPEED_MULTIPLIER = 28;
+
+          for (let i = 0; i < SPEED_MULTIPLIER; i++) {
+            // Si ya nos pasamos de la meta, cortamos
+            if (roundBetsCount >= TARGET_BETS_PER_ROUND) break;
+
+            const worldCoin = Math.random() < 0.5 ? 0 : 1;
+
+            monkeys.forEach((monkey) => {
+              if (!monkey.isDead) {
+                const guess = Math.random() < 0.5 ? 0 : 1;
+
+                if (guess === worldCoin) {
+                  monkey.balance += 1;
                 } else {
-                    card.classList.add('c-0');
-                    document.getElementById(`msg-${monkeyId}`).textContent = "FALLIDO";
-                }
-            }
-        }
-
-        function setStatus(text, type) {
-            elStatus.textContent = text;
-            if (type === 'play') elStatus.style.color = '#00ff88';
-            else if (type === 'pause') elStatus.style.color = '#ff4444';
-            else elStatus.style.color = '#fff';
-        }
-
-        // Lógica Principal
-        function startGame() {
-            if (isPlaying) return;
-
-            isPlaying = true;
-            btnStart.disabled = true;
-            btnStop.disabled = false;
-
-            // Ya no llamamos a initMonkeys() aquí para evitar que se reseteen las caras de los monos y sus contenedores.
-
-            roundNumber++;
-            elRoundCount.textContent = roundNumber;
-
-            playRounds();
-        }
-
-        function stopGame() {
-            isPlaying = false;
-            btnStart.disabled = false;
-            btnStop.disabled = true;
-            elStatus.textContent = "Sistema Detenido";
-        }
-
-        function playRounds() {
-            if (!isPlaying) return;
-
-            // FASE 1: JUEGO (10 SEGUNDOS)
-            setStatus(`JUGANDO RONDA #${roundNumber}... (Calculando 1€ por apuesta)`, 'play');
-
-            let startTime = Date.now();
-            let roundBetsCount = 0;
-            let activeMonkeysThisRound = 0;
-
-            // Bucle regulado con setInterval (20 veces por segundo) para no bloquear la pestaña del navegador
-            let simulationTimer = setInterval(() => {
-                if (!isPlaying) {
-                    clearInterval(simulationTimer);
-                    return;
+                  monkey.balance -= 1;
                 }
 
-                const currentTime = Date.now();
-
-                // Si pasaron 10 segundos, detenemos
-                if (currentTime - startTime >= TIME_PER_ROUND_MS) {
-                    clearInterval(simulationTimer);
-                    showResults(roundBetsCount, activeMonkeysThisRound);
-                    return;
+                if (monkey.balance <= 0) {
+                  monkey.balance = 0;
+                  monkey.isDead = true;
+                  monkey.deadRound = roundNumber;
                 }
-
-                // Procesamos varias apuestas en este bloque (ej. 100 apuestas cada 50ms)
-                let changedMonkeys = new Set();
-
-                for (let i = 0; i < 100; i++) {
-                    const randomIndex = Math.floor(Math.random() * monkeys.length);
-                    const monkey = monkeys[randomIndex];
-
-                    if (!monkey.isDead) {
-                        activeMonkeysThisRound++;
-                        monkey.balance += Math.random() > 0.5 ? 1 : -1;
-
-                        if (monkey.balance <= 0) {
-                            monkey.balance = 0;
-                            monkey.isDead = true;
-                            monkey.deadRound = roundNumber; // Guardar ronda de muerte
-                            setEmoji(monkey.id, '💀');
-                        }
-
-                        changedMonkeys.add(monkey);
-                        roundBetsCount++;
-                    }
-                }
-
-                // Actualizamos visualmente el DOM de las que cambiaron
-                changedMonkeys.forEach(m => setBalance(m.id, m.balance));
-            }, 50);
-        }
-
-        function showResults(betsInRound, activeMonkeys) {
-            // FASE 2: PAUSA Y RESULTADOS (2.5 SEGUNDOS)
-
-            // Actualizar UI final
-            totalBetsCounter += betsInRound;
-            updateUI();
-
-            setStatus(`RONDA #${roundNumber} FINALIZADA. Apuestas: ${betsInRound.toLocaleString()}. Viendo resultados...`, 'pause');
-
-            // 1. Aplicar animaciones visuales (Ganadores en Verde, Perdedores en Rojo)
-            // Y Actualizar colores de fondo base
-            monkeys.forEach(monkey => {
-                const card = document.getElementById(`card-${monkey.id}`);
-
-                if (monkey.isDead) {
-                    // Ya está en negro con calavera
-                } else {
-                    // Actualizar color base (Borde) según nuevo saldo
-                    const classesToRemove = ['c-10000', 'c-5000', 'c-2000', 'c-1500', 'c-1100', 'c-900', 'c-300'];
-                    classesToRemove.forEach(c => card.classList.remove(c));
-
-                    if (monkey.balance > 10000) card.classList.add('c-10000');
-                    else if (monkey.balance > 5000) card.classList.add('c-5000');
-                    else if (monkey.balance > 2000) card.classList.add('c-2000');
-                    else if (monkey.balance > 1500) card.classList.add('c-1500');
-                    else if (monkey.balance >= 1100) card.classList.add('c-1100');
-                    else if (monkey.balance >= 900) card.classList.add('c-900');
-                    else if (monkey.balance >= 300) card.classList.add('c-300');
-                    else if (monkey.balance > 0) card.classList.add('c-300'); // Riesgo alto
-
-                    setBalance(monkey.id, monkey.balance);
-
-                    // Animación visual (Brillo)
-                    if (monkey.balance > 1000) {
-                        card.classList.add('anim-win');
-                    } else if (monkey.balance < 1000) {
-                        card.classList.add('anim-lose');
-                    }
-                }
+                roundBetsCount++;
+              }
             });
+          }
+        }, 16);
+      }
 
-            // Esperar 2.5 segundos
-            setTimeout(() => {
-                // Limpiar animaciones de brillo para la siguiente ronda
-                document.querySelectorAll('.monkey-card').forEach(card => {
-                    card.classList.remove('anim-win', 'anim-lose');
-                });
+      function showResults(betsInRound) {
+        // FASE 2: PAUSA Y RESULTADOS (2.5 SEGUNDOS)
 
-                // Mensaje de cuándo murió cada mono (solo en la ronda actual)
-                const deadInRound = monkeys.filter(m => m.deadRound === roundNumber);
+        // Actualizar UI final
+        totalBetsCounter += betsInRound;
+        updateUI();
 
-                if (deadInRound.length > 0) {
-                    elStatus.innerHTML += `<br><span style="color:#ff4444">⚠️ ${deadInRound.length} MONOS FALLECIERON EN ESTA RONDA</span>`;
-                } else {
-                    elStatus.innerHTML += `<br><span style="color:#fff">Ningún mono falleció en esta ronda.</span>`;
-                }
+        setStatus(
+          `RONDA #${roundNumber} FINALIZADA. Apuestas: ${betsInRound.toLocaleString()}. Viendo resultados...`,
+          "pause",
+        );
 
-                // Pequeña pausa para leer el mensaje antes de reiniciar
-                setTimeout(() => {
-                    playRounds(); // Volver a jugar
-                }, 1000);
+        // 1. ACTUALIZACIÓN VISUAL MASIVA
+        // Ahora actualizamos el DOM de TODOS los monos aquí, ya que no se hizo durante el juego
+        monkeys.forEach((monkey) => {
+          const card = document.getElementById(`card-${monkey.id}`);
 
-            }, PAUSE_TIME_MS);
-        }
+          // Actualizar estado visual completo (Color y Emoji)
+          // Esto maneja también a los monos que murieron durante esta ronda rápida
+          setBalance(monkey.id, monkey.balance);
 
-        // Inicializar al cargar
-        initMonkeys();
+          if (!monkey.isDead) {
+            // Animación visual (Brillo) solo para vivos
+            if (monkey.balance > 1000) {
+              card.classList.add("anim-win");
+            } else if (monkey.balance < 1000) {
+              card.classList.add("anim-lose");
+            }
+          } else {
+             // Asegurar que los muertos tengan su clase correcta
+             card.classList.add("c-0");
+          }
+        });
+
+        // Esperar 2.5 segundos
+        setTimeout(() => {
+          // Limpiar animaciones de brillo para la siguiente ronda
+          document.querySelectorAll(".monkey-card").forEach((card) => {
+            card.classList.remove("anim-win", "anim-lose");
+          });
+
+          // Mensaje de cuándo murió cada mono (solo en la ronda actual)
+          const deadInRound = monkeys.filter(
+            (m) => m.deadRound === roundNumber,
+          );
+
+          if (deadInRound.length > 0) {
+            elStatus.innerHTML += `<br><span style="color:#ff4444">⚠️ ${deadInRound.length} MONOS FALLECIERON EN ESTA RONDA</span>`;
+          } else {
+            elStatus.innerHTML += `<br><span style="color:#fff">Ningún mono falleció en esta ronda.</span>`;
+          }
+
+          // Pequeña pausa para leer el mensaje antes de reiniciar
+          setTimeout(() => {
+            playRounds(); // Volver a jugar
+          }, 1000);
+        }, PAUSE_TIME_MS);
+      }
+
+      // Inicializar al cargar
+      initMonkeys();
     </script>
-</body>
-
+  </body>
 </html>
 ```
