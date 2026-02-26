@@ -175,8 +175,6 @@ function gameLoop(timestamp) {
   if (!isPlaying) return;
   if (!timestamp) timestamp = performance.now();
 
-  rng.refill();
-
   // Use dynamic speed from slider
   const currentSpeed = simulationSpeed;
 
