@@ -1,0 +1,7 @@
+127.0.0.1 - - [25/Feb/2026 19:40:54] "GET /monoslocal.html HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 19:50:18] "GET /monoslocal_benchmark.html HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 19:56:17] "GET /monoslocal_benchmark.html HTTP/1.1" 200 -
+127.0.0.1 - - [26/Feb/2026 09:51:35] "GET /monoslocal.html HTTP/1.1" 200 -
+127.0.0.1 - - [26/Feb/2026 10:30:02] "GET /monoslocal.html HTTP/1.1" 200 -
+127.0.0.1 - - [26/Feb/2026 10:46:58] "GET /monoslocal.html HTTP/1.1" 200 -
+127.0.0.1 - - [26/Feb/2026 10:54:56] "GET /monoslocal.html HTTP/1.1" 200 -
