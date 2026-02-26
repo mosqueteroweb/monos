@@ -444,16 +444,16 @@
       function playRounds() {
         if (!isPlaying) return;
 
-        // FASE 1: JUEGO (10 SEGUNDOS)
+        // FASE 1: JUEGO (10 SEGUNDOS - MODO ACELERADO)
         setStatus(
-          `JUGANDO RONDA #${roundNumber}... (Todos apuestan a la vez)`,
+          `JUGANDO RONDA #${roundNumber}... (Simulación acelerada, resultados en pausa)`,
           "play",
         );
 
         let startTime = Date.now();
         let roundBetsCount = 0;
 
-        // Bucle regulado con setInterval (20 veces por segundo)
+        // Intervalo de 16ms (aprox 60fps) para máxima velocidad
         let simulationTimer = setInterval(() => {
           if (!isPlaying) {
             clearInterval(simulationTimer);
@@ -462,45 +462,44 @@
 
           const currentTime = Date.now();
 
-          // Si pasaron 10 segundos, detenemos
+          // Si pasaron 10 segundos, detenemos y mostramos resultados
           if (currentTime - startTime >= TIME_PER_ROUND_MS) {
             clearInterval(simulationTimer);
             showResults(roundBetsCount);
             return;
           }
 
-          // Lógica de juego: Todos los monos vivos juegan una vez por tick
-          let changedMonkeys = new Set();
+          // BUCLE INTERNO DE VELOCIDAD
+          // Ejecutamos X apuestas por frame para simular velocidad extrema
+          // Ajustar este valor según rendimiento (1000 es seguro en escritorio)
+          const SPEED_MULTIPLIER = 1000;
 
-          // Generar resultado de la moneda "Mundial" para este tick
-          // 0 = Cara, 1 = Cruz (o viceversa)
-          const worldCoin = Math.random() < 0.5 ? 0 : 1;
+          for (let i = 0; i < SPEED_MULTIPLIER; i++) {
+            const worldCoin = Math.random() < 0.5 ? 0 : 1;
 
-          monkeys.forEach((monkey) => {
-            if (!monkey.isDead) {
-              // El mono hace su apuesta/predicción
-              const guess = Math.random() < 0.5 ? 0 : 1;
+            monkeys.forEach((monkey) => {
+              if (!monkey.isDead) {
+                const guess = Math.random() < 0.5 ? 0 : 1;
 
-              if (guess === worldCoin) {
-                monkey.balance += 1;
-              } else {
-                monkey.balance -= 1;
+                if (guess === worldCoin) {
+                  monkey.balance += 1;
+                } else {
+                  monkey.balance -= 1;
+                }
+
+                if (monkey.balance <= 0) {
+                  monkey.balance = 0;
+                  monkey.isDead = true;
+                  monkey.deadRound = roundNumber;
+                }
+                roundBetsCount++;
               }
+            });
+          }
 
-              if (monkey.balance <= 0) {
-                monkey.balance = 0;
-                monkey.isDead = true;
-                monkey.deadRound = roundNumber;
-              }
-
-              changedMonkeys.add(monkey);
-              roundBetsCount++;
-            }
-          });
-
-          // Actualizamos visualmente el DOM de las que cambiaron
-          changedMonkeys.forEach((m) => setBalance(m.id, m.balance));
-        }, 50);
+          // NOTA: NO actualizamos el DOM (setBalance) aquí para maximizar velocidad.
+          // Solo actualizamos contadores globales básicos si es necesario.
+        }, 16);
       }
 
       function showResults(betsInRound) {
@@ -515,20 +514,25 @@
           "pause",
         );
 
-        // 1. Aplicar animaciones visuales (Ganadores en Verde, Perdedores en Rojo)
+        // 1. ACTUALIZACIÓN VISUAL MASIVA
+        // Ahora actualizamos el DOM de TODOS los monos aquí, ya que no se hizo durante el juego
         monkeys.forEach((monkey) => {
           const card = document.getElementById(`card-${monkey.id}`);
 
-          if (!monkey.isDead) {
-            // Actualizar estado visual completo (Color y Emoji)
-            setBalance(monkey.id, monkey.balance);
+          // Actualizar estado visual completo (Color y Emoji)
+          // Esto maneja también a los monos que murieron durante esta ronda rápida
+          setBalance(monkey.id, monkey.balance);
 
-            // Animación visual (Brillo)
+          if (!monkey.isDead) {
+            // Animación visual (Brillo) solo para vivos
             if (monkey.balance > 1000) {
               card.classList.add("anim-win");
             } else if (monkey.balance < 1000) {
               card.classList.add("anim-lose");
             }
+          } else {
+             // Asegurar que los muertos tengan su clase correcta
+             card.classList.add("c-0");
           }
         });
 
