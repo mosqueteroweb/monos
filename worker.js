@@ -12,6 +12,7 @@ let matchCount = 0;
 let isPlaying = false;
 let simulationSpeed = 1000;
 let trackedHistory = {};
+let historyIndex = 0;
 let intervalId = null;
 
 // RNG
@@ -84,9 +85,12 @@ function initGame() {
     players = [];
     matchCount = 0;
     trackedHistory = {};
+    historyIndex = 0;
     TRACKED_PLAYER_IDS.forEach(id => {
-        trackedHistory[id] = [INITIAL_BANK];
+        trackedHistory[id] = new Int32Array(MAX_TRACKED_ROUNDS + 1);
+        trackedHistory[id][0] = INITIAL_BANK;
     });
+    historyIndex = 1;
 
     rng.refill();
     for (let i = 0; i < PLAYER_COUNT; i++) {
@@ -107,10 +111,11 @@ function gameLoop() {
             players[j].play(coinSide);
         }
 
-        if (matchCount <= MAX_TRACKED_ROUNDS) {
+        if (historyIndex <= MAX_TRACKED_ROUNDS) {
             for (const id of TRACKED_PLAYER_IDS) {
-                trackedHistory[id].push(players[id].bank);
+                trackedHistory[id][historyIndex] = players[id].bank;
             }
+            historyIndex++;
         }
     }
 
@@ -150,9 +155,13 @@ self.onmessage = function(e) {
             initGame();
             break;
         case 'GET_HISTORY':
+            const historyToSend = {};
+            for (const id of TRACKED_PLAYER_IDS) {
+                historyToSend[id] = Array.from(trackedHistory[id].subarray(0, historyIndex));
+            }
             self.postMessage({
                 type: 'HISTORY',
-                history: trackedHistory,
+                history: historyToSend,
                 rounds: matchCount,
                 ids: TRACKED_PLAYER_IDS
             });
