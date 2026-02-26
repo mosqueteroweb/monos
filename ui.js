@@ -153,9 +153,7 @@ function renderLoop() {
     requestAnimationFrame(renderLoop);
 }
 
-function updateUI() {
-    matchCountEl.textContent = matchCount.toLocaleString();
-
+function calculateStats(players) {
     let stats = {
         ruined: 0,
         losing: 0,
@@ -164,13 +162,12 @@ function updateUI() {
         x2: 0,
         x3: 0,
         x5: 0,
-        x10: 0
+        x10: 0,
+        totalMoney: 0
     };
 
-    let totalMoney = 0;
-
-    for (const p of localPlayers) {
-        totalMoney += p.bank;
+    for (const p of players) {
+        stats.totalMoney += p.bank;
         if (p.bank <= 0) stats.ruined++;
         else if (p.bank <= 900) stats.losing++;
         else if (p.bank <= 1099) stats.neutral++;
@@ -181,8 +178,15 @@ function updateUI() {
         if (p.bank >= 5000) stats.x5++;
         if (p.bank >= 10000) stats.x10++;
     }
+    return stats;
+}
 
-    totalMoneyEl.textContent = totalMoney.toLocaleString() + '€';
+function updateUI() {
+    matchCountEl.textContent = matchCount.toLocaleString();
+
+    const stats = calculateStats(localPlayers);
+
+    totalMoneyEl.textContent = stats.totalMoney.toLocaleString() + '€';
 
     const total = localPlayers.length || 1; // Avoid division by zero
 
