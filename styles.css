@@ -320,3 +320,19 @@ main {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Extracted from webworker.html */
+.back-link {
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: var(--text-secondary);
+  border: 1px solid #444;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
