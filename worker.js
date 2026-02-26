@@ -4,6 +4,7 @@ const BET_AMOUNT = 1;
 const PLAYER_COUNT = 1000;
 const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
 const MAX_TRACKED_ROUNDS = 100000;
+const MAX_SIMULATION_SPEED = 20000;
 
 // State
 let players = [];
@@ -121,11 +122,26 @@ function gameLoop() {
 function sendUpdate() {
     // We send a simplified state to minimize overhead.
     // We do NOT send trackedHistory every frame to avoid huge message sizes.
+    // Optimization: Use Transferable Objects (TypedArrays) instead of cloning objects.
+    const count = players.length;
+    const banks = new Int32Array(count);
+    const maxBanks = new Int32Array(count);
+    const ruinedAts = new Int32Array(count);
+
+    for (let i = 0; i < count; i++) {
+        const p = players[i];
+        banks[i] = p.bank;
+        maxBanks[i] = p.maxBank;
+        ruinedAts[i] = p.ruinedAt || 0;
+    }
+
     self.postMessage({
         type: 'UPDATE',
-        players: players,
+        banks: banks,
+        maxBanks: maxBanks,
+        ruinedAts: ruinedAts,
         matchCount: matchCount
-    });
+    }, [banks.buffer, maxBanks.buffer, ruinedAts.buffer]);
 }
 
 // Message Handler
@@ -160,7 +176,10 @@ self.onmessage = function(e) {
             initGame();
             break;
         case 'SPEED':
-            simulationSpeed = data.value;
+            const val = parseInt(data.value, 10);
+            if (!isNaN(val)) {
+                simulationSpeed = Math.max(1, Math.min(val, MAX_SIMULATION_SPEED));
+            }
             break;
     }
 };

@@ -1,731 +1,146 @@
 <!doctype html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:;"
+    />
     <title>Battle Royale: Cara o Cruz</title>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --accent-color: #bb86fc;
-            --success-color: #00e676; /* Neon Green */
-            --warning-color: #ffea00;
-            --danger-color: #ff1744;
-            --ruined-color: #37474f; /* Dark Grey */
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* HEADER */
-        header {
-            background-color: var(--surface-color);
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            z-index: 100;
-            flex-shrink: 0;
-        }
-
-        h1 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .worker-link {
-            font-size: 0.8rem;
-            text-decoration: none;
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .worker-link:hover {
-            background: var(--accent-color);
-            color: #000;
-        }
-
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        /* SLIDER */
-        .slider-container {
-            display: flex;
-            align-items: center;
-            width: 100px;
-        }
-
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 14px;
-            width: 14px;
-            border-radius: 50%;
-            background: var(--text-primary);
-            cursor: pointer;
-            margin-top: -5px;
-        }
-
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #444;
-            border-radius: 2px;
-        }
-
-        /* BUTTONS */
-        .btn-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        button {
-            background: #2c2c2c;
-            border: 1px solid #444;
-            color: var(--text-primary);
-            border-radius: 6px;
-            padding: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            width: 36px;
-            height: 36px;
-        }
-
-        button:hover {
-            background: #3d3d3d;
-            border-color: #666;
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        button svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        button.active {
-             background: var(--accent-color);
-             color: #000;
-             border-color: var(--accent-color);
-        }
-
-        /* MAIN CONTENT */
-        main {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #gameCanvas {
-            flex: 1;
-            width: 100%;
-            display: block;
-            background-color: #000;
-        }
-
-        /* STATS PANEL (Bottom) */
-        #statsPanel {
-            background-color: var(--surface-color);
-            border-top: 1px solid #333;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            /* Scrollable if content overflows on small screens */
-            overflow-y: auto;
-            max-height: 40vh;
-            flex-shrink: 0;
-        }
-
-        .stats-header {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 5px;
-        }
-
-        .match-counter {
-            font-size: 1.2rem;
-            color: var(--success-color);
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-        }
-
-        .money-counter {
-            font-size: 1.1rem;
-            color: var(--accent-color);
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            margin-right: 15px;
-        }
-
-        /* PROGRESS BAR */
-        .progress-container {
-            width: 100%;
-            height: 12px;
-            background-color: #333;
-            border-radius: 6px;
-            overflow: hidden;
-            display: flex;
-        }
-
-        .progress-bar {
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-
-        .pb-ruined { background-color: #37474f; }
-        .pb-losing { background-color: #ff9800; }
-        .pb-neutral { background-color: #ffeb3b; }
-        .pb-winning { background-color: #4caf50; }
-
-        /* STATS GRID */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-secondary);
-        }
-
-        .stat-value {
-            color: var(--text-primary);
-            font-weight: bold;
-            margin-left: auto;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        /* TOOLTIP */
-        #tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #444;
-            color: #fff;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            pointer-events: none;
-            display: none;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 600px) {
-            h1 { font-size: 0.9rem; }
-            .slider-container { width: 70px; }
-            button { width: 32px; height: 32px; }
-            #statsPanel { padding: 10px; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-        }
-    </style>
-</head>
-<body>
-
-<header>
-    <h1>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>
         BATTLE ROYALE
-        <a href="webworker.html" class="worker-link" title="Versión con Web Worker para mejor rendimiento">Versión Worker →</a>
-    </h1>
-    <div class="controls">
+        <a
+          href="webworker.html"
+          class="worker-link"
+          title="Versión con Web Worker para mejor rendimiento"
+          >Versión Worker →</a
+        >
+      </h1>
+      <div class="controls">
         <span class="money-counter" id="totalMoney">0€</span>
         <div class="slider-container" title="Velocidad de Simulación">
-            <input type="range" id="speedSlider" min="100" max="10000" step="100" value="1000">
+          <input
+            type="range"
+            id="speedSlider"
+            min="100"
+            max="10000"
+            step="100"
+            value="1000"
+          />
         </div>
         <div class="btn-group">
-            <button id="playPauseBtn" title="Iniciar/Pausar">
-                <!-- Play Icon -->
-                <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <!-- Pause Icon (hidden by default) -->
-                <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-            </button>
-            <button id="resetBtn" title="Reiniciar">
-                <!-- Reset Icon -->
-                <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-            </button>
-            <button id="statsBtn" title="Ver Estadísticas">
-                <!-- Stats Icon -->
-                <svg viewBox="0 0 24 24"><path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/></svg>
-            </button>
+          <button id="playPauseBtn" title="Iniciar/Pausar">
+            <!-- Play Icon -->
+            <svg id="icon-play" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <!-- Pause Icon (hidden by default) -->
+            <svg id="icon-pause" viewBox="0 0 24 24" class="hidden">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+          </button>
+          <button id="resetBtn" title="Reiniciar">
+            <!-- Reset Icon -->
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+              />
+            </svg>
+          </button>
+          <button id="statsBtn" title="Ver Estadísticas">
+            <!-- Stats Icon -->
+            <svg viewBox="0 0 24 24">
+              <path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z" />
+            </svg>
+          </button>
         </div>
+      </div>
+    </header>
+
+    <main>
+      <canvas id="gameCanvas"></canvas>
+      <div id="tooltip"></div>
+    </main>
+
+    <div id="statsPanel">
+      <div class="stats-header">
+        <span class="match-counter"
+          >Matches: <span id="matchCount">0</span></span
+        >
+      </div>
+
+      <div class="progress-container">
+        <div id="pb-ruined" class="progress-bar pb-ruined"></div>
+        <div id="pb-losing" class="progress-bar pb-losing"></div>
+        <div id="pb-neutral" class="progress-bar pb-neutral"></div>
+        <div id="pb-winning" class="progress-bar pb-winning"></div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="dot dot-ruined"></span>Arruinados (0€)<span
+            class="stat-value"
+            id="stat-ruined"
+            >0 (0%)</span
+          >
+        </div>
+        <div class="stat-item">
+          <span class="dot dot-losing"></span>Perdiendo (<900)<span
+            class="stat-value"
+            id="stat-losing"
+            >0 (0%)</span
+          >
+        </div>
+        <div class="stat-item">
+          <span class="dot dot-neutral"></span>Neutro (900-1100)<span
+            class="stat-value"
+            id="stat-neutral"
+            >0 (0%)</span
+          >
+        </div>
+        <div class="stat-item">
+          <span class="dot dot-winning"></span>Ganando (>1100)<span
+            class="stat-value"
+            id="stat-winning"
+            >0 (0%)</span
+          >
+        </div>
+        <div class="stat-item">
+          <span class="dot dot-x2"></span>x2 (>2k)<span
+            class="stat-value"
+            id="stat-x2"
+            >0 (0%)</span
+          >
+        </div>
+        <div class="stat-item">
+          <span class="dot dot-x3"></span>x3 (>3k)<span
+            class="stat-value"
+            id="stat-x3"
+            >0 (0%)</span
+          >
+        </div>
+        <div class="stat-item">
+          <span class="dot dot-x5"></span>x5 (>5k)<span
+            class="stat-value"
+            id="stat-x5"
+            >0 (0%)</span
+          >
+        </div>
+        <div class="stat-item">
+          <span class="dot dot-x10"></span>x10 (>10k)<span
+            class="stat-value"
+            id="stat-x10"
+            >0 (0%)</span
+          >
+        </div>
+      </div>
     </div>
-</header>
 
-<main>
-    <canvas id="gameCanvas"></canvas>
-    <div id="tooltip"></div>
-</main>
-
-<div id="statsPanel">
-    <div class="stats-header">
-        <span class="match-counter">Matches: <span id="matchCount">0</span></span>
-    </div>
-
-    <div class="progress-container">
-        <div id="pb-ruined" class="progress-bar pb-ruined" style="width: 0%"></div>
-        <div id="pb-losing" class="progress-bar pb-losing" style="width: 0%"></div>
-        <div id="pb-neutral" class="progress-bar pb-neutral" style="width: 100%"></div>
-        <div id="pb-winning" class="progress-bar pb-winning" style="width: 0%"></div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-item"><span class="dot" style="background:#37474f"></span>Arruinados (0€)<span class="stat-value" id="stat-ruined">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#ff9800"></span>Perdiendo (<900)<span class="stat-value" id="stat-losing">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#ffeb3b"></span>Neutro (900-1100)<span class="stat-value" id="stat-neutral">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#4caf50"></span>Ganando (>1100)<span class="stat-value" id="stat-winning">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#00e676"></span>x2 (>2k)<span class="stat-value" id="stat-x2">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#2196f3"></span>x3 (>3k)<span class="stat-value" id="stat-x3">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#f44336"></span>x5 (>5k)<span class="stat-value" id="stat-x5">0 (0%)</span></div>
-        <div class="stat-item"><span class="dot" style="background:#ff00ff"></span>x10 (>10k)<span class="stat-value" id="stat-x10">0 (0%)</span></div>
-    </div>
-</div>
-
-<script>
-    // Constants
-    const INITIAL_BANK = 1000;
-    const BET_AMOUNT = 1;
-    const PLAYER_COUNT = 1000;
-    const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
-    const MAX_TRACKED_ROUNDS = 100000;
-
-    // Configurable via slider
-    let simulationSpeed = 1000;
-
-    const BANK_COLORS = {
-        BLACK: '#000000', // Ruined
-        ORANGE: '#ff9800', // Losing (<900)
-        YELLOW: '#ffeb3b', // Neutral (901-1099)
-        GREEN_NORMAL: '#4caf50', // Winning (>1100)
-        GREEN_HIGHLIGHT: '#00e676', // x2
-        BLUE: '#2196f3', // x3
-        RED: '#f44336', // x5
-        FUCHSIA: '#ff00ff' // x10
-    };
-
-    // State
-    let players = [];
-    let matchCount = 0;
-    let isPlaying = false;
-    let animationId;
-    let lastUITime = 0;
-    let trackedHistory = {};
-
-    // DOM Elements
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const statsBtn = document.getElementById('statsBtn');
-    const speedSlider = document.getElementById('speedSlider');
-    const matchCountEl = document.getElementById('matchCount');
-    const totalMoneyEl = document.getElementById('totalMoney');
-    const tooltip = document.getElementById('tooltip');
-
-    // Icons
-    const iconPlay = document.getElementById('icon-play');
-    const iconPause = document.getElementById('icon-pause');
-
-    // Stats Elements
-    const statEls = {
-        ruined: document.getElementById('stat-ruined'),
-        losing: document.getElementById('stat-losing'),
-        neutral: document.getElementById('stat-neutral'),
-        winning: document.getElementById('stat-winning'),
-        x2: document.getElementById('stat-x2'),
-        x3: document.getElementById('stat-x3'),
-        x5: document.getElementById('stat-x5'),
-        x10: document.getElementById('stat-x10')
-    };
-
-    // Progress Bars
-    const pbEls = {
-        ruined: document.getElementById('pb-ruined'),
-        losing: document.getElementById('pb-losing'),
-        neutral: document.getElementById('pb-neutral'),
-        winning: document.getElementById('pb-winning')
-    };
-
-    class SecureBatchRNG {
-        constructor() {
-            this.BUFFER_SIZE = 128 * 1024;
-            this.buffer = new Uint8Array(this.BUFFER_SIZE);
-            this.bitIndex = 0;
-
-            // Pre-calculate chunks to avoid temporary views in refill()
-            this.views = [];
-            const CHUNK_SIZE = 65536;
-            for (let offset = 0; offset < this.BUFFER_SIZE; offset += CHUNK_SIZE) {
-                const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
-                this.views.push(this.buffer.subarray(offset, end));
-            }
-        }
-
-        refill() {
-            for (let i = 0; i < this.views.length; i++) {
-                window.crypto.getRandomValues(this.views[i]);
-            }
-            this.bitIndex = 0;
-        }
-
-        getBit() {
-            if (this.bitIndex >= this.BUFFER_SIZE * 8) {
-                this.refill();
-            }
-            const byteIndex = this.bitIndex >> 3;
-            const bitOffset = this.bitIndex & 7;
-            const bit = (this.buffer[byteIndex] >> bitOffset) & 1;
-            this.bitIndex++;
-            return bit;
-        }
-    }
-
-    const rng = new SecureBatchRNG();
-
-    class Player {
-        constructor(id) {
-            this.id = id;
-            this.bank = INITIAL_BANK;
-            this.visualBank = INITIAL_BANK; // Smooth transitions
-            this.active = true;
-            this.maxBank = INITIAL_BANK;
-            this.ruinedAt = null;
-        }
-
-        play(coinSide) {
-            if (!this.active) return;
-
-            const choice = rng.getBit();
-
-            if (choice === coinSide) {
-                this.bank += BET_AMOUNT;
-                if (this.bank > this.maxBank) this.maxBank = this.bank;
-            } else {
-                this.bank -= BET_AMOUNT;
-                if (this.bank <= 0) {
-                    this.bank = 0;
-                    this.active = false;
-                    this.ruinedAt = matchCount;
-                }
-            }
-        }
-    }
-
-    function initGame() {
-        players = [];
-        matchCount = 0;
-        trackedHistory = {};
-        TRACKED_PLAYER_IDS.forEach(id => {
-            trackedHistory[id] = [INITIAL_BANK];
-        });
-
-        rng.refill();
-        for (let i = 0; i < PLAYER_COUNT; i++) {
-            players.push(new Player(i));
-        }
-        updateUI();
-        resizeCanvas();
-    }
-
-    function toggleGame() {
-        isPlaying = !isPlaying;
-        if (isPlaying) {
-            iconPlay.style.display = 'none';
-            iconPause.style.display = 'block';
-            playPauseBtn.classList.add('active');
-            animationId = requestAnimationFrame(gameLoop);
-        } else {
-            iconPlay.style.display = 'block';
-            iconPause.style.display = 'none';
-            playPauseBtn.classList.remove('active');
-            cancelAnimationFrame(animationId);
-        }
-    }
-
-    function resetGame() {
-        isPlaying = false;
-        cancelAnimationFrame(animationId);
-        iconPlay.style.display = 'block';
-        iconPause.style.display = 'none';
-        playPauseBtn.classList.remove('active');
-        initGame();
-    }
-
-    function gameLoop(timestamp) {
-        if (!isPlaying) return;
-        if (!timestamp) timestamp = performance.now();
-
-        rng.refill();
-
-        // Use dynamic speed from slider
-        const currentSpeed = simulationSpeed;
-
-        for (let i = 0; i < currentSpeed; i++) {
-            matchCount++;
-            const coinSide = rng.getBit();
-            for (let j = 0; j < PLAYER_COUNT; j++) {
-                players[j].play(coinSide);
-            }
-
-            if (matchCount <= MAX_TRACKED_ROUNDS) {
-                for (const id of TRACKED_PLAYER_IDS) {
-                    trackedHistory[id].push(players[id].bank);
-                }
-            }
-        }
-
-        if (timestamp - lastUITime > 66) {
-            updateUI();
-            lastUITime = timestamp;
-        }
-
-        // Interpolation for smooth visualization
-        for (let j = 0; j < PLAYER_COUNT; j++) {
-            players[j].visualBank += (players[j].bank - players[j].visualBank) * 0.1;
-        }
-
-        draw();
-        animationId = requestAnimationFrame(gameLoop);
-    }
-
-    function updateUI() {
-        matchCountEl.textContent = matchCount.toLocaleString();
-
-        let stats = {
-            ruined: 0,
-            losing: 0, // < 900
-            neutral: 0, // 900-1100
-            winning: 0, // > 1100
-            x2: 0,
-            x3: 0,
-            x5: 0,
-            x10: 0
-        };
-
-        let totalMoney = 0;
-
-        for (const p of players) {
-            totalMoney += p.bank;
-            if (p.bank <= 0) stats.ruined++;
-            else if (p.bank <= 900) stats.losing++;
-            else if (p.bank <= 1099) stats.neutral++;
-            else stats.winning++;
-
-            // Accumulative stats for highlighting
-            if (p.bank >= 2000) stats.x2++;
-            if (p.bank >= 3000) stats.x3++;
-            if (p.bank >= 5000) stats.x5++;
-            if (p.bank >= 10000) stats.x10++;
-        }
-
-        totalMoneyEl.textContent = totalMoney.toLocaleString() + '€';
-
-        const total = PLAYER_COUNT;
-
-        const getPct = (val) => Math.round((val / total) * 100);
-
-        statEls.ruined.textContent = `${stats.ruined} (${getPct(stats.ruined)}%)`;
-        statEls.losing.textContent = `${stats.losing} (${getPct(stats.losing)}%)`;
-        statEls.neutral.textContent = `${stats.neutral} (${getPct(stats.neutral)}%)`;
-        statEls.winning.textContent = `${stats.winning} (${getPct(stats.winning)}%)`;
-        statEls.x2.textContent = `${stats.x2} (${getPct(stats.x2)}%)`;
-        statEls.x3.textContent = `${stats.x3} (${getPct(stats.x3)}%)`;
-        statEls.x5.textContent = `${stats.x5} (${getPct(stats.x5)}%)`;
-        statEls.x10.textContent = `${stats.x10} (${getPct(stats.x10)}%)`;
-
-        // Update Progress Bars
-        const pctRuined = (stats.ruined / total) * 100;
-        const pctLosing = (stats.losing / total) * 100;
-        const pctNeutral = (stats.neutral / total) * 100;
-        const pctWinning = (stats.winning / total) * 100;
-
-        pbEls.ruined.style.width = pctRuined + '%';
-        pbEls.losing.style.width = pctLosing + '%';
-        pbEls.neutral.style.width = pctNeutral + '%';
-        pbEls.winning.style.width = pctWinning + '%';
-    }
-
-    const COLS = 40;
-    const ROWS = 25;
-
-    function getColor(bank) {
-        if (bank <= 0) return BANK_COLORS.BLACK;
-        if (bank <= 900) return BANK_COLORS.ORANGE;
-        if (bank <= 1099) return BANK_COLORS.YELLOW;
-        if (bank < 2000) return BANK_COLORS.GREEN_NORMAL;
-        if (bank < 3000) return BANK_COLORS.GREEN_HIGHLIGHT; // >= 2000
-        if (bank < 5000) return BANK_COLORS.BLUE; // >= 3000
-        if (bank < 10000) return BANK_COLORS.RED; // >= 5000
-        return BANK_COLORS.FUCHSIA; // >= 10000
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const cellWidth = canvas.width / COLS;
-        const cellHeight = canvas.height / ROWS;
-        const padding = 1;
-
-        for (let i = 0; i < players.length; i++) {
-            const p = players[i];
-            const col = i % COLS;
-            const row = Math.floor(i / COLS);
-
-            const x = col * cellWidth;
-            const y = row * cellHeight;
-
-            // Force black immediately if ruined, otherwise use visualBank
-            if (p.bank <= 0) {
-                ctx.fillStyle = BANK_COLORS.BLACK;
-            } else {
-                ctx.fillStyle = getColor(p.visualBank);
-            }
-
-            ctx.fillRect(x + padding, y + padding, Math.max(0, cellWidth - padding * 2), Math.max(0, cellHeight - padding * 2));
-        }
-    }
-
-    function resizeCanvas() {
-        const parent = canvas.parentElement;
-        if (parent.clientWidth > 0 && parent.clientHeight > 0) {
-            canvas.width = parent.clientWidth;
-            canvas.height = parent.clientHeight;
-            draw();
-        }
-    }
-
-    // Interaction
-    function handleInteraction(clientX, clientY) {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = clientX - rect.left;
-        const mouseY = clientY - rect.top;
-
-        const cellWidth = canvas.width / COLS;
-        const cellHeight = canvas.height / ROWS;
-
-        const col = Math.floor(mouseX / cellWidth);
-        const row = Math.floor(mouseY / cellHeight);
-        const index = row * COLS + col;
-
-        if (index >= 0 && index < players.length) {
-            const p = players[index];
-            tooltip.style.display = 'block';
-
-            let tooltipX = clientX + 15;
-            let tooltipY = clientY + 15;
-
-            if (tooltipX + 150 > window.innerWidth) tooltipX = clientX - 160;
-            if (tooltipY + 100 > window.innerHeight) tooltipY = clientY - 110;
-
-            tooltip.style.left = tooltipX + 'px';
-            tooltip.style.top = tooltipY + 'px';
-
-            tooltip.textContent = '';
-            const title = document.createElement('strong');
-            title.style.color = 'var(--accent-color)';
-            title.textContent = `Agente #${p.id}`;
-            tooltip.appendChild(title);
-            tooltip.appendChild(document.createElement('br'));
-            tooltip.appendChild(document.createTextNode(`Banca: ${p.bank}€`));
-            if (p.bank <= 0) {
-                tooltip.appendChild(document.createElement('br'));
-                const ruinedSpan = document.createElement('span');
-                ruinedSpan.style.color = 'var(--danger-color)';
-                ruinedSpan.textContent = `Arruinado (Ronda ${p.ruinedAt})`;
-                tooltip.appendChild(ruinedSpan);
-            }
-        } else {
-            tooltip.style.display = 'none';
-        }
-    }
-
-    canvas.addEventListener('mousemove', (e) => handleInteraction(e.clientX, e.clientY));
-    canvas.addEventListener('click', (e) => handleInteraction(e.clientX, e.clientY));
-    canvas.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 0) handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
-    }, {passive: true});
-    canvas.addEventListener('mouseleave', () => tooltip.style.display = 'none');
-
-    // Controls
-    playPauseBtn.addEventListener('click', toggleGame);
-    resetBtn.addEventListener('click', resetGame);
-
-    // Slider
-    speedSlider.addEventListener('input', (e) => {
-        simulationSpeed = parseInt(e.target.value, 10);
-    });
-
-    // Stats Scroll / Navigation
-    statsBtn.addEventListener('click', () => {
-        if (isPlaying) toggleGame();
-
-        const dataToSave = {
-            history: trackedHistory,
-            rounds: matchCount,
-            ids: TRACKED_PLAYER_IDS
-        };
-        try {
-            localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
-            window.location.href = 'seguimiento.html';
-        } catch (e) {
-            console.error("Error saving stats:", e);
-            alert("Error al guardar datos de seguimiento.");
-        }
-    });
-
-    window.addEventListener('resize', resizeCanvas);
-
-    // Init
-    initGame();
-    setTimeout(resizeCanvas, 50);
-</script>
-</body>
+    <script src="game.js" defer></script>
+  </body>
 </html>
