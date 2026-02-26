@@ -291,11 +291,12 @@
     </div>
 
     <script>
-      // Configuración
+      // Configuración (MODO ACELERADO 500k/3s)
       const INITIAL_BALANCE = 1000;
       const TOTAL_MONKEYS = 100;
-      const TIME_PER_ROUND_MS = 10000; // 10 segundos
-      const PAUSE_TIME_MS = 2500; // 2.5 segundos para ver resultados
+      const TIME_PER_ROUND_MS = 3000;  // 3 segundos de cálculo
+      const PAUSE_TIME_MS = 1000;      // 1 segundo de pausa visual
+      const TARGET_BETS_PER_ROUND = 500000;
 
       // Variables Globales
       let monkeys = [];
@@ -428,9 +429,6 @@
         btnStart.disabled = true;
         btnStop.disabled = false;
 
-        roundNumber++;
-        elRoundCount.textContent = roundNumber;
-
         playRounds();
       }
 
@@ -444,16 +442,18 @@
       function playRounds() {
         if (!isPlaying) return;
 
-        // FASE 1: JUEGO (10 SEGUNDOS - MODO ACELERADO)
+        roundNumber++;
+        elRoundCount.textContent = roundNumber;
+
         setStatus(
-          `JUGANDO RONDA #${roundNumber}... (Simulación acelerada, resultados en pausa)`,
+          `JUGANDO RONDA #${roundNumber}... (Simulando 500k apuestas)`,
           "play",
         );
 
         let startTime = Date.now();
         let roundBetsCount = 0;
 
-        // Intervalo de 16ms (aprox 60fps) para máxima velocidad
+        // Intervalo de 16ms
         let simulationTimer = setInterval(() => {
           if (!isPlaying) {
             clearInterval(simulationTimer);
@@ -461,20 +461,29 @@
           }
 
           const currentTime = Date.now();
+          const elapsedTime = currentTime - startTime;
 
-          // Si pasaron 10 segundos, detenemos y mostramos resultados
-          if (currentTime - startTime >= TIME_PER_ROUND_MS) {
+          // Si llegamos a la meta de apuestas O al tiempo límite (3s)
+          if (
+            roundBetsCount >= TARGET_BETS_PER_ROUND ||
+            elapsedTime >= TIME_PER_ROUND_MS
+          ) {
             clearInterval(simulationTimer);
             showResults(roundBetsCount);
             return;
           }
 
-          // BUCLE INTERNO DE VELOCIDAD
-          // Ejecutamos X apuestas por frame para simular velocidad extrema
-          // Ajustar este valor según rendimiento (1000 es seguro en escritorio)
-          const SPEED_MULTIPLIER = 1000;
+          // CALIBRACIÓN DE VELOCIDAD
+          // Objetivo: 500,000 apuestas en 3000ms
+          // ~166,666 por segundo -> ~2777 por frame (a 60fps)
+          // Cada bucle interno hace TOTAL_MONKEYS (100) apuestas
+          // Necesitamos SPEED_MULTIPLIER ≈ 28
+          const SPEED_MULTIPLIER = 28;
 
           for (let i = 0; i < SPEED_MULTIPLIER; i++) {
+            // Si ya nos pasamos de la meta, cortamos
+            if (roundBetsCount >= TARGET_BETS_PER_ROUND) break;
+
             const worldCoin = Math.random() < 0.5 ? 0 : 1;
 
             monkeys.forEach((monkey) => {
@@ -496,9 +505,6 @@
               }
             });
           }
-
-          // NOTA: NO actualizamos el DOM (setBalance) aquí para maximizar velocidad.
-          // Solo actualizamos contadores globales básicos si es necesario.
         }, 16);
       }
 
