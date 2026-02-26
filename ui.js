@@ -247,6 +247,12 @@ function draw() {
     }
 }
 
+let cachedCanvasRect = null;
+
+function updateCanvasRect() {
+    cachedCanvasRect = canvas.getBoundingClientRect();
+}
+
 function resizeCanvas() {
     const parent = canvas.parentElement;
     if (parent.clientWidth > 0 && parent.clientHeight > 0) {
@@ -254,11 +260,13 @@ function resizeCanvas() {
         canvas.height = parent.clientHeight;
         draw();
     }
+    updateCanvasRect();
 }
 
 // Interaction
 function handleInteraction(clientX, clientY) {
-    const rect = canvas.getBoundingClientRect();
+    if (!cachedCanvasRect) updateCanvasRect();
+    const rect = cachedCanvasRect;
     const mouseX = clientX - rect.left;
     const mouseY = clientY - rect.top;
 
@@ -316,6 +324,7 @@ statsBtn.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('scroll', updateCanvasRect, { passive: true });
 
 // Init
 worker.postMessage({ type: 'INIT' });
