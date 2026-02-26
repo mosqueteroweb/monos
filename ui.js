@@ -60,7 +60,7 @@ worker.onmessage = function(e) {
     const data = e.data;
     if (data.type === 'UPDATE') {
         matchCount = data.matchCount;
-        updateLocalPlayers(data.players);
+        updateLocalPlayers(data);
 
         const now = performance.now();
         if (now - lastUITime > 66) {
@@ -76,7 +76,7 @@ worker.onmessage = function(e) {
         };
         try {
             localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
-            window.location.href = 'seguimiento.html';
+            window.location.href = 'seguimiento.html?from=webworker.html';
         } catch (err) {
             console.error("Error saving stats:", err);
             alert("Error al guardar datos de seguimiento.");
@@ -84,26 +84,31 @@ worker.onmessage = function(e) {
     }
 };
 
-function updateLocalPlayers(workerPlayers) {
+function updateLocalPlayers(data) {
+    const { banks, maxBanks, ruinedAts } = data;
+    const count = banks.length;
+
     if (localPlayers.length === 0) {
         // Initialize
-        localPlayers = workerPlayers.map(p => ({
-            id: p.id,
-            bank: p.bank,
-            visualBank: p.bank,
-            active: p.active,
-            ruinedAt: p.ruinedAt,
-            maxBank: p.maxBank
-        }));
+        localPlayers = new Array(count);
+        for (let i = 0; i < count; i++) {
+            localPlayers[i] = {
+                id: i,
+                bank: banks[i],
+                visualBank: banks[i],
+                active: banks[i] > 0,
+                ruinedAt: ruinedAts[i],
+                maxBank: maxBanks[i]
+            };
+        }
     } else {
         // Update existing
-        for (let i = 0; i < localPlayers.length; i++) {
-            const wp = workerPlayers[i];
+        for (let i = 0; i < count; i++) {
             const lp = localPlayers[i];
-            lp.bank = wp.bank;
-            lp.active = wp.active;
-            lp.ruinedAt = wp.ruinedAt;
-            lp.maxBank = wp.maxBank;
+            lp.bank = banks[i];
+            lp.active = banks[i] > 0;
+            lp.ruinedAt = ruinedAts[i];
+            lp.maxBank = maxBanks[i];
         }
     }
 }
@@ -242,6 +247,12 @@ function draw() {
     }
 }
 
+let cachedCanvasRect = null;
+
+function updateCanvasRect() {
+    cachedCanvasRect = canvas.getBoundingClientRect();
+}
+
 function resizeCanvas() {
     const parent = canvas.parentElement;
     if (parent.clientWidth > 0 && parent.clientHeight > 0) {
@@ -249,11 +260,13 @@ function resizeCanvas() {
         canvas.height = parent.clientHeight;
         draw();
     }
+    updateCanvasRect();
 }
 
 // Interaction
 function handleInteraction(clientX, clientY) {
-    const rect = canvas.getBoundingClientRect();
+    if (!cachedCanvasRect) updateCanvasRect();
+    const rect = cachedCanvasRect;
     const mouseX = clientX - rect.left;
     const mouseY = clientY - rect.top;
 
@@ -277,11 +290,25 @@ function handleInteraction(clientX, clientY) {
         tooltip.style.left = tooltipX + 'px';
         tooltip.style.top = tooltipY + 'px';
 
-        tooltip.innerHTML = `
-            <strong style="color:var(--accent-color)">Agente #${p.id}</strong><br>
-            Banca: ${p.bank}€<br>
-            ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
-        `;
+        tooltip.textContent = '';
+
+        const strong = document.createElement('strong');
+        strong.style.color = 'var(--accent-color)';
+        strong.textContent = `Agente #${p.id}`;
+        tooltip.appendChild(strong);
+
+        tooltip.appendChild(document.createElement('br'));
+
+        tooltip.appendChild(document.createTextNode(`Banca: ${p.bank}€`));
+
+        tooltip.appendChild(document.createElement('br'));
+
+        if (p.bank <= 0) {
+            const span = document.createElement('span');
+            span.style.color = 'var(--danger-color)';
+            span.textContent = `Arruinado (Ronda ${p.ruinedAt})`;
+            tooltip.appendChild(span);
+        }
     } else {
         tooltip.style.display = 'none';
     }
@@ -311,6 +338,7 @@ statsBtn.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('scroll', updateCanvasRect, { passive: true });
 
 // Init
 worker.postMessage({ type: 'INIT' });
