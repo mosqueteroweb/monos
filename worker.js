@@ -4,6 +4,7 @@ const BET_AMOUNT = 1;
 const PLAYER_COUNT = 1000;
 const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
 const MAX_TRACKED_ROUNDS = 100000;
+const MAX_SIMULATION_SPEED = 20000;
 
 // State
 let players = [];
@@ -160,7 +161,10 @@ self.onmessage = function(e) {
             initGame();
             break;
         case 'SPEED':
-            simulationSpeed = data.value;
+            const val = parseInt(data.value, 10);
+            if (!isNaN(val)) {
+                simulationSpeed = Math.max(1, Math.min(val, MAX_SIMULATION_SPEED));
+            }
             break;
     }
 };
