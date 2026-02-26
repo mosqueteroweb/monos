@@ -290,11 +290,25 @@ function handleInteraction(clientX, clientY) {
         tooltip.style.left = tooltipX + 'px';
         tooltip.style.top = tooltipY + 'px';
 
-        tooltip.innerHTML = `
-            <strong style="color:var(--accent-color)">Agente #${p.id}</strong><br>
-            Banca: ${p.bank}€<br>
-            ${p.bank <= 0 ? `<span style='color:var(--danger-color)'>Arruinado (Ronda ${p.ruinedAt})</span>` : ''}
-        `;
+        tooltip.textContent = '';
+
+        const strong = document.createElement('strong');
+        strong.style.color = 'var(--accent-color)';
+        strong.textContent = `Agente #${p.id}`;
+        tooltip.appendChild(strong);
+
+        tooltip.appendChild(document.createElement('br'));
+
+        tooltip.appendChild(document.createTextNode(`Banca: ${p.bank}€`));
+
+        tooltip.appendChild(document.createElement('br'));
+
+        if (p.bank <= 0) {
+            const span = document.createElement('span');
+            span.style.color = 'var(--danger-color)';
+            span.textContent = `Arruinado (Ronda ${p.ruinedAt})`;
+            tooltip.appendChild(span);
+        }
     } else {
         tooltip.style.display = 'none';
     }
