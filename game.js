@@ -407,7 +407,7 @@ statsBtn.addEventListener("click", () => {
     localStorage.setItem("seguimientoData", JSON.stringify(dataToSave));
     window.location.href = "seguimiento.html?from=index.html";
   } catch (e) {
-    console.error("Error saving stats:", e);
+    Logger.error("Error saving stats:", e);
     alert("Error al guardar datos de seguimiento.");
   }
 });

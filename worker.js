@@ -6,6 +6,9 @@ const TRACKED_PLAYER_IDS = [500, 334, 23, 765];
 const MAX_TRACKED_ROUNDS = 100000;
 const MAX_SIMULATION_SPEED = 20000;
 
+// Load Logger
+importScripts('logger.js');
+
 // State
 let players = [];
 let matchCount = 0;
