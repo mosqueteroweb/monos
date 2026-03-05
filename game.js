@@ -80,7 +80,7 @@ class SecureBatchRNG {
 
   refill() {
     for (let i = 0; i < this.views.length; i++) {
-      window.crypto.getRandomValues(this.views[i]);
+      crypto.getRandomValues(this.views[i]);
     }
     this.bitIndex = 0;
   }
@@ -344,8 +344,8 @@ function handleInteraction(clientX, clientY) {
     let tooltipX = clientX + 15;
     let tooltipY = clientY + 15;
 
-    if (tooltipX + 150 > window.innerWidth) tooltipX = clientX - 160;
-    if (tooltipY + 100 > window.innerHeight) tooltipY = clientY - 110;
+    if (tooltipX + 150 > innerWidth) tooltipX = clientX - 160;
+    if (tooltipY + 100 > innerHeight) tooltipY = clientY - 110;
 
     tooltip.style.left = tooltipX + "px";
     tooltip.style.top = tooltipY + "px";
@@ -405,15 +405,15 @@ statsBtn.addEventListener("click", () => {
   };
   try {
     localStorage.setItem("seguimientoData", JSON.stringify(dataToSave));
-    window.location.href = "seguimiento.html?from=index.html";
+    location.href = "seguimiento.html?from=index.html";
   } catch (e) {
     console.error("Error saving stats:", e);
     alert("Error al guardar datos de seguimiento.");
   }
 });
 
-window.addEventListener("resize", resizeCanvas);
-window.addEventListener("scroll", updateCanvasRect, { passive: true });
+addEventListener("resize", resizeCanvas);
+addEventListener("scroll", updateCanvasRect, { passive: true });
 
 // Init
 initGame();

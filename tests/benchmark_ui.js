@@ -97,22 +97,20 @@ const mockWindowWithCrypto = {
 function runBenchmark() {
     console.log('--- Running UI Throttling Benchmark ---');
 
-    const indexPath = path.join(__dirname, '..', 'index.html');
-    const indexContent = fs.readFileSync(indexPath, 'utf8');
-
-    // Extract JS from <script>
-    const scriptMatch = indexContent.match(/<script>([\s\S]*?)<\/script>/);
-    if (!scriptMatch) {
-        throw new Error('No script found in index.html');
-    }
-    let scriptCode = scriptMatch[1];
+    const gamePath = path.join(__dirname, '..', 'game.js');
+    let scriptCode = fs.readFileSync(gamePath, 'utf8');
 
     // Remove `window.` prefix usage if any, to simplify scope management
-    // But better: create a VM context with `window` global.
+    scriptCode = scriptCode.replace(/window\./g, '');
 
     // We need to inject our mocks.
     const context = {
         window: mockWindowWithCrypto,
+        crypto: mockCrypto,
+        innerWidth: mockWindow.innerWidth,
+        innerHeight: mockWindow.innerHeight,
+        location: { href: '' },
+        addEventListener: mockWindow.addEventListener,
         document: mockDocument,
         console: console,
         requestAnimationFrame: mockWindow.requestAnimationFrame,

@@ -76,7 +76,7 @@ worker.onmessage = function(e) {
         };
         try {
             localStorage.setItem('seguimientoData', JSON.stringify(dataToSave));
-            window.location.href = 'seguimiento.html?from=webworker.html';
+            location.href = 'seguimiento.html?from=webworker.html';
         } catch (err) {
             console.error("Error saving stats:", err);
             alert("Error al guardar datos de seguimiento.");
@@ -288,8 +288,8 @@ function handleInteraction(clientX, clientY) {
         let tooltipX = clientX + 15;
         let tooltipY = clientY + 15;
 
-        if (tooltipX + 150 > window.innerWidth) tooltipX = clientX - 160;
-        if (tooltipY + 100 > window.innerHeight) tooltipY = clientY - 110;
+        if (tooltipX + 150 > innerWidth) tooltipX = clientX - 160;
+        if (tooltipY + 100 > innerHeight) tooltipY = clientY - 110;
 
         tooltip.style.left = tooltipX + 'px';
         tooltip.style.top = tooltipY + 'px';
@@ -341,8 +341,8 @@ statsBtn.addEventListener('click', () => {
     worker.postMessage({ type: 'GET_HISTORY' });
 });
 
-window.addEventListener('resize', resizeCanvas);
-window.addEventListener('scroll', updateCanvasRect, { passive: true });
+addEventListener('resize', resizeCanvas);
+addEventListener('scroll', updateCanvasRect, { passive: true });
 
 // Init
 worker.postMessage({ type: 'INIT' });
