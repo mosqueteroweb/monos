@@ -28,7 +28,14 @@ function createWorker() {
                 return view;
             }
         },
+        addEventListener: () => {}, // Mocked for Logger
         onmessage: null // Will be assigned by worker code
+    };
+
+    // Mock Logger
+    const mockLogger = {
+        error: () => {},
+        info: () => {}
     };
 
     // Mock global functions needed by worker
@@ -50,20 +57,23 @@ function createWorker() {
         console: {
             log: () => {},
             error: () => {}
-        }
+        },
+        importScripts: (url) => {
+            // Mock behavior of importScripts loading logger.js
+            if (url === 'logger.js') {
+                mockSelf.Logger = mockLogger;
+            }
+        },
+        Logger: mockLogger // Pre-inject into the function arguments as well
     };
 
     // Wrap worker code in a function to execute it with mocked scope
-    // We remove the last line if it's just a comment or empty, but generally wrapping works
-    // Note: We need to expose the context to the eval'd code
+    // Best approach: new Function(...) where we pass all necessary globals as parameters
+    const workerFn = new Function('self', 'setInterval', 'clearInterval', 'console', 'importScripts', 'Logger', workerContent);
 
-    // Construct the function body. We prepend context keys to be available in scope
-    // But since we use 'self' extensively, we can just pass 'self' and others as args
-
-    // Best approach: new Function('self', 'setInterval', 'clearInterval', 'console', workerContent)
-    const workerFn = new Function('self', 'setInterval', 'clearInterval', 'console', workerContent);
-
-    workerFn(context.self, context.setInterval, context.clearInterval, context.console);
+    // We pass mockSelf for both 'self' AND 'Logger' since it will be attached there too,
+    // but the 'Logger' parameter ensures it's available even before importScripts if the code were different.
+    workerFn(context.self, context.setInterval, context.clearInterval, context.console, context.importScripts, context.Logger);
 
     return {
         self: mockSelf,
