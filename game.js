@@ -26,6 +26,7 @@ let isPlaying = false;
 let animationId;
 let lastUITime = 0;
 let trackedHistory = {};
+let historyIndex = 0;
 let canvasRect = null;
 
 // DOM Elements
@@ -132,9 +133,12 @@ function initGame() {
   players = [];
   matchCount = 0;
   trackedHistory = {};
+  historyIndex = 0;
   TRACKED_PLAYER_IDS.forEach((id) => {
-    trackedHistory[id] = [INITIAL_BANK];
+    trackedHistory[id] = new Int32Array(MAX_TRACKED_ROUNDS + 1);
+    trackedHistory[id][0] = INITIAL_BANK;
   });
+  historyIndex = 1;
 
   rng.refill();
   for (let i = 0; i < PLAYER_COUNT; i++) {
@@ -186,10 +190,11 @@ function gameLoop(timestamp) {
       players[j].play(coinSide);
     }
 
-    if (matchCount <= MAX_TRACKED_ROUNDS) {
+    if (historyIndex <= MAX_TRACKED_ROUNDS) {
       for (const id of TRACKED_PLAYER_IDS) {
-        trackedHistory[id].push(players[id].bank);
+        trackedHistory[id][historyIndex] = players[id].bank;
       }
+      historyIndex++;
     }
   }
 
@@ -398,8 +403,13 @@ speedSlider.addEventListener("input", (e) => {
 statsBtn.addEventListener("click", () => {
   if (isPlaying) toggleGame();
 
+  const historyToSave = {};
+  for (const id of TRACKED_PLAYER_IDS) {
+    historyToSave[id] = Array.from(trackedHistory[id].subarray(0, historyIndex));
+  }
+
   const dataToSave = {
-    history: trackedHistory,
+    history: historyToSave,
     rounds: matchCount,
     ids: TRACKED_PLAYER_IDS,
   };
