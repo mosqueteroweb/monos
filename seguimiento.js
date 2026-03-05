@@ -2,14 +2,14 @@ const backBtn = document.getElementById("backBtn");
 const ctx = document.getElementById("trackingChart").getContext("2d");
 
 // Navigation
-const urlParams = new URLSearchParams(window.location.search);
+const urlParams = new URLSearchParams(location.search);
 const fromPage = urlParams.get("from");
 
 backBtn.addEventListener("click", () => {
   if (fromPage === "webworker.html") {
-    window.location.href = "webworker.html";
+    location.href = "webworker.html";
   } else {
-    window.location.href = "index.html";
+    location.href = "index.html";
   }
 });
 
