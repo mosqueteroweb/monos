@@ -297,6 +297,42 @@
     </div>
 
     <script>
+      class SecureBatchRNG {
+        constructor() {
+          this.BUFFER_SIZE = 128 * 1024;
+          this.buffer = new Uint8Array(this.BUFFER_SIZE);
+          this.bitIndex = 0;
+
+          // Pre-calculate chunks to avoid temporary views in refill()
+          this.views = [];
+          const CHUNK_SIZE = 65536;
+          for (let offset = 0; offset < this.BUFFER_SIZE; offset += CHUNK_SIZE) {
+            const end = Math.min(offset + CHUNK_SIZE, this.BUFFER_SIZE);
+            this.views.push(this.buffer.subarray(offset, end));
+          }
+        }
+
+        refill() {
+          for (let i = 0; i < this.views.length; i++) {
+            window.crypto.getRandomValues(this.views[i]);
+          }
+          this.bitIndex = 0;
+        }
+
+        getBit() {
+          if (this.bitIndex >= this.BUFFER_SIZE * 8) {
+            this.refill();
+          }
+          const byteIndex = this.bitIndex >> 3;
+          const bitOffset = this.bitIndex & 7;
+          const bit = (this.buffer[byteIndex] >> bitOffset) & 1;
+          this.bitIndex++;
+          return bit;
+        }
+      }
+
+      const rng = new SecureBatchRNG();
+
       // Configuración (MODO ACELERADO 500k/3s)
       const INITIAL_BALANCE = 1000;
       const TOTAL_MONKEYS = 100;
@@ -344,6 +380,7 @@
 
       // Inicializar Monos
       function initMonkeys() {
+        rng.refill();
         gridEl.innerHTML = "";
         monkeys = [];
 
@@ -508,11 +545,11 @@
             // Si ya nos pasamos de la meta, cortamos
             if (roundBetsCount >= TARGET_BETS_PER_ROUND) break;
 
-            const worldCoin = Math.random() < 0.5 ? 0 : 1;
+            const worldCoin = rng.getBit();
 
             monkeys.forEach((monkey) => {
               if (!monkey.isDead) {
-                const guess = Math.random() < 0.5 ? 0 : 1;
+                const guess = rng.getBit();
 
                 if (guess === worldCoin) {
                   monkey.balance += 1;
