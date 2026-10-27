@@ -40,6 +40,8 @@ const totalMoneyEl = document.getElementById("totalMoney");
 const tooltip = document.getElementById("tooltip");
 const iconPlay = document.getElementById("icon-play");
 const iconPause = document.getElementById("icon-pause");
+const trackingOverlay = document.getElementById("trackingOverlay");
+const trackingFrame = document.getElementById("trackingFrame");
 
 const STAT_KEYS = ["ruined", "losing", "neutral", "winning", "x2", "x3", "x5", "x10"];
 const BAR_KEYS = ["ruined", "losing", "neutral", "winning"];
@@ -274,12 +276,29 @@ function saveHistoryAndOpen(data) {
         rounds: data.rounds,
       }),
     );
-    location.href = "seguimiento.html";
   } catch (e) {
     Logger.error("Error saving stats:", e);
     alert("Error al guardar datos de seguimiento.");
+    return;
   }
+  // Se abre encima del juego, que queda en pausa con su estado intacto.
+  trackingFrame.src = "seguimiento.html";
+  trackingOverlay.classList.remove("hidden");
 }
+
+function closeTracking() {
+  trackingOverlay.classList.add("hidden");
+  trackingFrame.src = "about:blank";
+}
+
+addEventListener("message", (e) => {
+  if (e.origin === location.origin && e.data && e.data.type === "CLOSE_TRACKING") {
+    closeTracking();
+  }
+});
+addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !trackingOverlay.classList.contains("hidden")) closeTracking();
+});
 
 canvas.addEventListener("mousemove", (e) => handleInteraction(e.clientX, e.clientY));
 canvas.addEventListener("click", (e) => handleInteraction(e.clientX, e.clientY));

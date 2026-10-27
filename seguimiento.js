@@ -2,7 +2,15 @@ const backBtn = document.getElementById("backBtn");
 const chartWrapper = document.querySelector(".chart-wrapper");
 
 backBtn.addEventListener("click", () => {
-  location.href = "index.html";
+  // Dentro del juego se cierra la capa; abierta sola, vuelve a la portada.
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: "CLOSE_TRACKING" }, location.origin);
+  } else {
+    location.href = "index.html";
+  }
+});
+addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && window.parent !== window) backBtn.click();
 });
 
 function showMessage(html) {
