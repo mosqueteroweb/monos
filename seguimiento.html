@@ -2,34 +2,48 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+      content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none';"
     />
     <title>Seguimiento - Battle Royale</title>
-    <!-- Chart.js via CDN, con versión fija -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Chart.js via CDN, con versión fija y huella de integridad -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+      integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4"
+      crossorigin="anonymous"
+    ></script>
     <script src="logger.js"></script>
     <link rel="stylesheet" href="seguimiento.css" />
   </head>
   <body>
     <header>
-      <button id="backBtn" title="Volver">
-        <svg viewBox="0 0 24 24">
+      <button id="backBtn" type="button" aria-label="Volver al juego" title="Volver al juego">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path
             d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
           />
         </svg>
       </button>
       <h1>Seguimiento</h1>
-      <div style="width: 36px"></div>
-      <!-- Spacer for balance -->
+      <!-- Hueco del mismo ancho que el botón, para centrar el título -->
+      <div class="header-spacer" aria-hidden="true"></div>
     </header>
 
     <main>
+      <p class="chart-note" id="chartNote">
+        Son 4 monos elegidos como ejemplo (los n.º 500, 334, 23 y 765). Podrían
+        ser otros cualesquiera: todos juegan con las mismas reglas y su
+        recorrido sería igual de imprevisible.
+      </p>
       <div class="chart-wrapper">
-        <canvas id="trackingChart"></canvas>
+        <canvas
+          id="trackingChart"
+          role="img"
+          aria-describedby="chartNote"
+          aria-label="Evolución de la banca de 4 jugadores"
+        ></canvas>
       </div>
     </main>
 

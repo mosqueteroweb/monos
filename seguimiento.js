@@ -13,8 +13,29 @@ addEventListener("keydown", (e) => {
   if (e.key === "Escape" && window.parent !== window) backBtn.click();
 });
 
-function showMessage(html) {
-  chartWrapper.innerHTML = `<div class="no-data">${html}</div>`;
+function showMessage(lines) {
+  const box = document.createElement("div");
+  box.className = "no-data";
+  box.setAttribute("role", "status");
+  lines.forEach((line, i) => {
+    if (i > 0) box.appendChild(document.createElement("br"));
+    box.appendChild(document.createTextNode(line));
+  });
+  chartWrapper.replaceChildren(box);
+}
+
+// Resumen en texto de la gráfica, para lectores de pantalla.
+function describeChart(data) {
+  const last = data.points.length - 1;
+  const parts = data.ids.map((id) => {
+    const track = data.history[id];
+    const ruinedAt = track.indexOf(0);
+    if (ruinedAt >= 0) {
+      return `jugador ${id}: arruinado hacia la ronda ${data.points[ruinedAt].toLocaleString()}`;
+    }
+    return `jugador ${id}: ${track[last].toLocaleString()} €`;
+  });
+  return `Evolución de la banca durante ${data.points[last].toLocaleString()} rondas. ${parts.join("; ")}.`;
 }
 
 function loadData() {
@@ -31,9 +52,9 @@ function loadData() {
 const data = loadData();
 
 if (!data) {
-  showMessage("No hay datos de seguimiento disponibles.<br>Juega una partida primero.");
+  showMessage(["No hay datos de seguimiento disponibles.", "Juega una partida primero."]);
 } else if (typeof Chart === "undefined") {
-  showMessage("No se pudo cargar la librería de gráficos.<br>Comprueba la conexión a internet.");
+  showMessage(["No se pudo cargar la librería de gráficos.", "Comprueba la conexión a internet."]);
 } else {
   const colors = [
     "#00ffff", // Cyan
@@ -51,6 +72,8 @@ if (!data) {
     pointRadius: 0, // Hide points for cleaner line
     tension: 0.1,
   }));
+
+  document.getElementById("trackingChart").setAttribute("aria-label", describeChart(data));
 
   Chart.defaults.color = "#a0a0a0";
   Chart.defaults.borderColor = "#333";

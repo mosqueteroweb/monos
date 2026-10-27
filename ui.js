@@ -1,6 +1,6 @@
 // Colores por categoría, en el orden de MonosSim.COLOR.
 const PALETTE = [
-  "#000000", // Arruinado
+  "#607d8b", // Arruinado (gris: el negro no se distingue del fondo)
   "#ff9800", // Perdiendo (<900)
   "#ffeb3b", // Neutro (900-1100)
   "#4caf50", // Ganando (>1100)
@@ -10,10 +10,12 @@ const PALETTE = [
   "#ff00ff", // x10
 ];
 
-const COLS = 40;
-const ROWS = 25;
+const GRID_LONG = 40;
+const GRID_SHORT = 25;
 const STATS_INTERVAL_MS = 66;
-const SMOOTHING = 0.1;
+const TOUCH_TOOLTIP_MS = 3000;
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const smoothing = () => (reducedMotion.matches ? 1 : 0.1);
 
 // State
 let banks = new Int32Array(0);
@@ -27,6 +29,12 @@ let lastStatsTime = 0;
 let cssWidth = 0;
 let cssHeight = 0;
 let canvasRect = null;
+// 40×25 en horizontal y 25×40 en vertical, para que las casillas no salgan
+// finísimas en un móvil.
+let cols = GRID_LONG;
+let rows = GRID_SHORT;
+let selectedIndex = -1; // Casilla elegida con el teclado
+let tooltipTimer = null;
 
 // DOM Elements
 const canvas = document.getElementById("gameCanvas");
@@ -42,6 +50,11 @@ const iconPlay = document.getElementById("icon-play");
 const iconPause = document.getElementById("icon-pause");
 const trackingOverlay = document.getElementById("trackingOverlay");
 const trackingFrame = document.getElementById("trackingFrame");
+const playerInfo = document.getElementById("playerInfo");
+// Lo que queda detrás del seguimiento mientras está abierto.
+const backgroundRegions = ["header", "main", "#statsPanel"].map((s) =>
+  document.querySelector(s),
+);
 
 const STAT_KEYS = ["ruined", "losing", "neutral", "winning", "x2", "x3", "x5", "x10"];
 const BAR_KEYS = ["ruined", "losing", "neutral", "winning"];
@@ -120,6 +133,7 @@ function applyUpdate(data) {
     visualBanks = Float64Array.from(banks);
     colorIndexes = new Uint8Array(banks.length);
   }
+  if (selectedIndex >= 0 && tooltip.style.display === "block") showSelectedPlayer(false);
   needsRedraw = true;
 
   const now = performance.now();
@@ -134,6 +148,9 @@ function setPlaying(playing) {
   iconPlay.classList.toggle("hidden", playing);
   iconPause.classList.toggle("hidden", !playing);
   playPauseBtn.classList.toggle("active", playing);
+  const label = playing ? "Pausar" : "Iniciar";
+  playPauseBtn.setAttribute("aria-label", label);
+  playPauseBtn.title = label;
 }
 
 function toggleGame() {
@@ -169,7 +186,7 @@ function renderLoop() {
   for (let i = 0; i < banks.length; i++) {
     const diff = banks[i] - visualBanks[i];
     if (Math.abs(diff) > 0.5) {
-      visualBanks[i] += diff * SMOOTHING;
+      visualBanks[i] += diff * smoothing();
       moving = true;
     } else {
       visualBanks[i] = banks[i];
@@ -187,12 +204,12 @@ function draw() {
   if (banks.length === 0) return;
 
   for (let i = 0; i < banks.length; i++) {
-    // Los arruinados se ven en negro al momento, sin transición.
+    // Los arruinados cambian de color al momento, sin transición.
     colorIndexes[i] = banks[i] <= 0 ? 0 : MonosSim.colorIndex(visualBanks[i]);
   }
 
-  const cellWidth = cssWidth / COLS;
-  const cellHeight = cssHeight / ROWS;
+  const cellWidth = cssWidth / cols;
+  const cellHeight = cssHeight / rows;
   const padding = 1;
   const w = Math.max(0, cellWidth - padding * 2);
   const h = Math.max(0, cellHeight - padding * 2);
@@ -202,10 +219,21 @@ function draw() {
     ctx.fillStyle = PALETTE[c];
     for (let i = 0; i < banks.length; i++) {
       if (colorIndexes[i] !== c) continue;
-      const x = (i % COLS) * cellWidth;
-      const y = Math.floor(i / COLS) * cellHeight;
+      const x = (i % cols) * cellWidth;
+      const y = Math.floor(i / cols) * cellHeight;
       ctx.fillRect(x + padding, y + padding, w, h);
     }
+  }
+
+  if (selectedIndex >= 0 && document.activeElement === canvas) {
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+      (selectedIndex % cols) * cellWidth + 1,
+      Math.floor(selectedIndex / cols) * cellHeight + 1,
+      cellWidth - 2,
+      cellHeight - 2,
+    );
   }
 }
 
@@ -224,45 +252,92 @@ function resizeCanvas() {
     canvas.style.width = cssWidth + "px";
     canvas.style.height = cssHeight + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Elige la orientación con casillas más cuadradas.
+    const landscape = cssWidth >= cssHeight;
+    cols = landscape ? GRID_LONG : GRID_SHORT;
+    rows = landscape ? GRID_SHORT : GRID_LONG;
     needsRedraw = true;
   }
   updateCanvasRect();
 }
 
 // Interaction
-function handleInteraction(clientX, clientY) {
+function cellAt(clientX, clientY) {
   if (!canvasRect) updateCanvasRect();
-  const col = Math.floor(((clientX - canvasRect.left) / cssWidth) * COLS);
-  const row = Math.floor(((clientY - canvasRect.top) / cssHeight) * ROWS);
-  const index = row * COLS + col;
+  const col = Math.floor(((clientX - canvasRect.left) / cssWidth) * cols);
+  const row = Math.floor(((clientY - canvasRect.top) / cssHeight) * rows);
+  const index = row * cols + col;
+  return col < 0 || col >= cols || index < 0 || index >= banks.length ? -1 : index;
+}
 
-  if (col < 0 || col >= COLS || index < 0 || index >= banks.length) {
-    tooltip.style.display = "none";
+function describePlayer(index) {
+  const lines = [`Agente #${index}`, `Banca: ${banks[index].toLocaleString()}€`];
+  if (banks[index] <= 0) lines.push(`Arruinado (Ronda ${ruinedAts[index].toLocaleString()})`);
+  return lines;
+}
+
+function hideTooltip() {
+  tooltip.style.display = "none";
+}
+
+function showTooltip(index, clientX, clientY) {
+  if (index < 0) {
+    hideTooltip();
     return;
   }
-
-  tooltip.style.display = "block";
-  let tooltipX = clientX + 15;
-  let tooltipY = clientY + 15;
-  if (tooltipX + 150 > innerWidth) tooltipX = clientX - 160;
-  if (tooltipY + 100 > innerHeight) tooltipY = clientY - 110;
-  tooltip.style.left = tooltipX + "px";
-  tooltip.style.top = tooltipY + "px";
-
+  const [title, ...rest] = describePlayer(index);
   tooltip.textContent = "";
-  const title = document.createElement("strong");
-  title.style.color = "var(--accent-color)";
-  title.textContent = `Agente #${index}`;
-  tooltip.appendChild(title);
-  tooltip.appendChild(document.createElement("br"));
-  tooltip.appendChild(document.createTextNode(`Banca: ${banks[index]}€`));
-  if (banks[index] <= 0) {
+  const strong = document.createElement("strong");
+  strong.className = "tooltip-title";
+  strong.textContent = title;
+  tooltip.appendChild(strong);
+  rest.forEach((line, i) => {
     tooltip.appendChild(document.createElement("br"));
-    const ruinedSpan = document.createElement("span");
-    ruinedSpan.style.color = "var(--danger-color)";
-    ruinedSpan.textContent = `Arruinado (Ronda ${ruinedAts[index].toLocaleString()})`;
-    tooltip.appendChild(ruinedSpan);
-  }
+    const span = document.createElement("span");
+    if (i === 1) span.className = "tooltip-ruined";
+    span.textContent = line;
+    tooltip.appendChild(span);
+  });
+
+  // Se mide tras rellenarlo para que no se salga de la pantalla.
+  tooltip.style.display = "block";
+  const { offsetWidth: w, offsetHeight: h } = tooltip;
+  let x = clientX + 15;
+  let y = clientY + 15;
+  if (x + w > innerWidth - 8) x = clientX - w - 15;
+  if (y + h > innerHeight - 8) y = clientY - h - 15;
+  tooltip.style.left = Math.max(8, x) + "px";
+  tooltip.style.top = Math.max(8, y) + "px";
+}
+
+// Teclado: las flechas recorren las casillas y se anuncia cada jugador.
+function showSelectedPlayer(announce) {
+  const cellWidth = cssWidth / cols;
+  const cellHeight = cssHeight / rows;
+  if (!canvasRect) updateCanvasRect();
+  const x = canvasRect.left + ((selectedIndex % cols) + 0.5) * cellWidth;
+  const y = canvasRect.top + (Math.floor(selectedIndex / cols) + 0.5) * cellHeight;
+  showTooltip(selectedIndex, x, y);
+  if (announce) playerInfo.textContent = describePlayer(selectedIndex).join(". ");
+  needsRedraw = true;
+}
+
+function handleCanvasKey(e) {
+  if (banks.length === 0) return;
+  const moves = {
+    ArrowLeft: -1,
+    ArrowRight: 1,
+    ArrowUp: -cols,
+    ArrowDown: cols,
+    Home: -Infinity,
+    End: Infinity,
+  };
+  if (!(e.key in moves)) return;
+  e.preventDefault();
+  const current = selectedIndex < 0 ? 0 : selectedIndex;
+  const next = current + moves[e.key];
+  selectedIndex = Math.min(banks.length - 1, Math.max(0, next));
+  showSelectedPlayer(true);
 }
 
 function saveHistoryAndOpen(data) {
@@ -284,12 +359,23 @@ function saveHistoryAndOpen(data) {
   // Se abre encima del juego, que queda en pausa con su estado intacto.
   trackingFrame.src = "seguimiento.html";
   trackingOverlay.classList.remove("hidden");
+  backgroundRegions.forEach((el) => (el.inert = true));
+  hideTooltip();
 }
 
 function closeTracking() {
   trackingOverlay.classList.add("hidden");
   trackingFrame.src = "about:blank";
+  backgroundRegions.forEach((el) => (el.inert = false));
+  statsBtn.focus();
 }
+
+// Al cargar el seguimiento, el foco pasa a su botón de volver.
+trackingFrame.addEventListener("load", () => {
+  if (trackingOverlay.classList.contains("hidden")) return;
+  const back = trackingFrame.contentDocument?.getElementById("backBtn");
+  if (back) back.focus();
+});
 
 addEventListener("message", (e) => {
   if (e.origin === location.origin && e.data && e.data.type === "CLOSE_TRACKING") {
@@ -300,22 +386,33 @@ addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !trackingOverlay.classList.contains("hidden")) closeTracking();
 });
 
-canvas.addEventListener("mousemove", (e) => handleInteraction(e.clientX, e.clientY));
-canvas.addEventListener("click", (e) => handleInteraction(e.clientX, e.clientY));
-canvas.addEventListener(
-  "touchstart",
-  (e) => {
-    if (e.touches.length > 0) handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
-  },
-  { passive: true },
-);
-canvas.addEventListener("mouseleave", () => (tooltip.style.display = "none"));
+canvas.addEventListener("pointermove", (e) => {
+  if (e.pointerType === "mouse") showTooltip(cellAt(e.clientX, e.clientY), e.clientX, e.clientY);
+});
+canvas.addEventListener("mouseleave", hideTooltip);
+// En el móvil no hay "salir del canvas": la ficha se oculta sola.
+canvas.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse") return;
+  showTooltip(cellAt(e.clientX, e.clientY), e.clientX, e.clientY);
+  clearTimeout(tooltipTimer);
+  tooltipTimer = setTimeout(hideTooltip, TOUCH_TOOLTIP_MS);
+});
+canvas.addEventListener("keydown", handleCanvasKey);
+canvas.addEventListener("focus", () => (needsRedraw = true));
+canvas.addEventListener("blur", () => {
+  hideTooltip();
+  needsRedraw = true;
+});
 
 // Controls
 playPauseBtn.addEventListener("click", toggleGame);
 resetBtn.addEventListener("click", resetGame);
 speedSlider.addEventListener("input", (e) => {
   engine.post({ type: "SPEED", value: e.target.value });
+  speedSlider.setAttribute(
+    "aria-valuetext",
+    `${Number(e.target.value).toLocaleString()} rondas por paso`,
+  );
 });
 statsBtn.addEventListener("click", () => {
   if (isPlaying) toggleGame();

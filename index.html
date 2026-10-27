@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:;"
@@ -13,12 +13,16 @@
   </head>
   <body>
     <header>
-      <h1>
-        BATTLE ROYALE
-      </h1>
+      <h1>Battle Royale</h1>
       <div class="controls">
-        <span class="money-counter" id="totalMoney">0€</span>
-        <div class="slider-container" title="Velocidad de Simulación">
+        <span
+          class="money-counter"
+          id="totalMoney"
+          title="Dinero total en juego"
+          aria-label="Dinero total en juego"
+          >0€</span
+        >
+        <div class="slider-container">
           <input
             type="range"
             id="speedSlider"
@@ -26,30 +30,29 @@
             max="10000"
             step="100"
             value="1000"
+            aria-label="Velocidad de simulación"
+            aria-valuetext="1000 rondas por paso"
+            title="Velocidad de simulación"
           />
         </div>
         <div class="btn-group">
-          <button id="playPauseBtn" title="Iniciar/Pausar">
-            <!-- Play Icon -->
-            <svg id="icon-play" viewBox="0 0 24 24">
+          <button id="playPauseBtn" type="button" aria-label="Iniciar" title="Iniciar">
+            <svg id="icon-play" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M8 5v14l11-7z" />
             </svg>
-            <!-- Pause Icon (hidden by default) -->
-            <svg id="icon-pause" viewBox="0 0 24 24" class="hidden">
+            <svg id="icon-pause" viewBox="0 0 24 24" class="hidden" aria-hidden="true" focusable="false">
               <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
             </svg>
           </button>
-          <button id="resetBtn" title="Reiniciar">
-            <!-- Reset Icon -->
-            <svg viewBox="0 0 24 24">
+          <button id="resetBtn" type="button" aria-label="Reiniciar" title="Reiniciar">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path
                 d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
               />
             </svg>
           </button>
-          <button id="statsBtn" title="Ver Estadísticas">
-            <!-- Stats Icon -->
-            <svg viewBox="0 0 24 24">
+          <button id="statsBtn" type="button" aria-label="Ver seguimiento" title="Ver seguimiento">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z" />
             </svg>
           </button>
@@ -58,23 +61,35 @@
     </header>
 
     <main>
-      <canvas id="gameCanvas"></canvas>
-      <div id="tooltip"></div>
+      <canvas
+        id="gameCanvas"
+        tabindex="0"
+        role="img"
+        aria-label="Cuadrícula de 1000 jugadores coloreada según su dinero. Usa las flechas para consultar cada jugador; el resumen está en el panel de estadísticas."
+      ></canvas>
+      <div id="tooltip" aria-hidden="true"></div>
+      <p id="playerInfo" class="visually-hidden" aria-live="polite"></p>
     </main>
 
     <!-- Seguimiento encima del juego, para no perder la partida al volver -->
-    <div id="trackingOverlay" class="hidden">
-      <iframe id="trackingFrame" title="Seguimiento"></iframe>
+    <div
+      id="trackingOverlay"
+      class="hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Seguimiento de 4 jugadores"
+    >
+      <iframe id="trackingFrame" title="Seguimiento de 4 jugadores"></iframe>
     </div>
 
-    <div id="statsPanel">
+    <section id="statsPanel" aria-label="Estadísticas">
       <div class="stats-header">
         <span class="match-counter"
-          >Matches: <span id="matchCount">0</span></span
+          >Rondas: <span id="matchCount">0</span></span
         >
       </div>
 
-      <div class="progress-container">
+      <div class="progress-container" aria-hidden="true">
         <div id="pb-ruined" class="progress-bar pb-ruined"></div>
         <div id="pb-losing" class="progress-bar pb-losing"></div>
         <div id="pb-neutral" class="progress-bar pb-neutral"></div>
@@ -83,63 +98,63 @@
 
       <div class="stats-grid">
         <div class="stat-item">
-          <span class="dot dot-ruined"></span>Arruinados (0€)<span
+          <span aria-hidden="true" class="dot dot-ruined"></span>Arruinados (0€)<span
             class="stat-value"
             id="stat-ruined"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-losing"></span>Perdiendo (&lt;900)<span
+          <span aria-hidden="true" class="dot dot-losing"></span>Perdiendo (&lt;900)<span
             class="stat-value"
             id="stat-losing"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-neutral"></span>Neutro (900–1100)<span
+          <span aria-hidden="true" class="dot dot-neutral"></span>Neutro (900‑1100)<span
             class="stat-value"
             id="stat-neutral"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-winning"></span>Ganando (&gt;1100)<span
+          <span aria-hidden="true" class="dot dot-winning"></span>Ganando (&gt;1100)<span
             class="stat-value"
             id="stat-winning"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-x2"></span>x2 (≥2k)<span
+          <span aria-hidden="true" class="dot dot-x2"></span>x2 (≥2k)<span
             class="stat-value"
             id="stat-x2"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-x3"></span>x3 (≥3k)<span
+          <span aria-hidden="true" class="dot dot-x3"></span>x3 (≥3k)<span
             class="stat-value"
             id="stat-x3"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-x5"></span>x5 (≥5k)<span
+          <span aria-hidden="true" class="dot dot-x5"></span>x5 (≥5k)<span
             class="stat-value"
             id="stat-x5"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-x10"></span>x10 (≥10k)<span
+          <span aria-hidden="true" class="dot dot-x10"></span>x10 (≥10k)<span
             class="stat-value"
             id="stat-x10"
             >0 (0%)</span
           >
         </div>
       </div>
-    </div>
+    </section>
 
     <script src="sim.js"></script>
     <script src="ui.js"></script>

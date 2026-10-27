@@ -19,6 +19,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  /* En el móvil, 100vh incluye la barra del navegador y corta el panel. */
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -191,7 +193,7 @@ main {
 }
 
 .pb-ruined {
-  background-color: #37474f;
+  background-color: #607d8b;
 }
 .pb-losing {
   background-color: #ff9800;
@@ -232,17 +234,19 @@ main {
   color: var(--text-primary);
   font-weight: bold;
   margin-left: auto;
+  white-space: nowrap;
 }
 
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 /* Helper classes for dots to replace inline styles */
 .dot-ruined {
-  background-color: #37474f;
+  background-color: #607d8b;
 }
 .dot-losing {
   background-color: #ff9800;
@@ -268,7 +272,7 @@ main {
 
 /* TOOLTIP */
 #tooltip {
-  position: absolute;
+  position: fixed;
   background: rgba(0, 0, 0, 0.9);
   border: 1px solid #444;
   color: #fff;
@@ -279,6 +283,14 @@ main {
   display: none;
   z-index: 1000;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-title {
+  color: var(--accent-color);
+}
+
+.tooltip-ruined {
+  color: var(--danger-color);
 }
 
 #trackingOverlay {
@@ -295,27 +307,109 @@ main {
   display: block;
 }
 
+/* FOCO VISIBLE (teclado) */
+button:focus-visible,
+input[type="range"]:focus-visible,
+#gameCanvas:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+#gameCanvas:focus-visible {
+  outline-offset: -3px;
+}
+
 /* Utility classes */
 .hidden {
   display: none !important;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Pantallas táctiles: objetivos de al menos 44 px y un control de velocidad
+   fácil de arrastrar con el dedo. */
+@media (pointer: coarse) {
+  button {
+    width: 44px;
+    height: 44px;
+  }
+  input[type="range"] {
+    height: 44px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    height: 24px;
+    width: 24px;
+    margin-top: -10px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    height: 24px;
+    width: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar,
+  button {
+    transition: none;
+  }
+  button:active {
+    transform: none;
+  }
+}
+
 /* RESPONSIVE */
+/* En el móvil la cabecera pasa a dos filas: título y botones arriba,
+   dinero y velocidad abajo. En una sola fila no caben y el botón de
+   seguimiento quedaba fuera de la pantalla. */
 @media (max-width: 600px) {
+  header {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 8px 12px;
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+  .controls {
+    display: contents;
+  }
   h1 {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    order: 1;
+  }
+  .btn-group {
+    order: 2;
+  }
+  .money-counter {
+    order: 3;
+    font-size: 1rem;
+    margin-right: 0;
   }
   .slider-container {
-    width: 70px;
-  }
-  button {
-    width: 32px;
-    height: 32px;
+    order: 4;
+    flex: 1;
+    width: auto;
+    margin-left: 16px;
   }
   #statsPanel {
     padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+  .match-counter {
+    font-size: 1rem;
   }
   .stats-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    font-size: 0.8rem;
   }
 }
