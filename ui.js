@@ -13,6 +13,13 @@ const PALETTE = [
 const GRID_LONG = 40;
 const GRID_SHORT = 25;
 const STATS_INTERVAL_MS = 66;
+// Velocidad: el deslizador (0-100) es logarítmico, de 1 a 10 000 rondas por paso.
+const sliderToRounds = (value) => Math.round(10 ** (value / 25));
+const roundsToSlider = (rounds) => Math.round(25 * Math.log10(rounds));
+// Al entrar, la simulación arranca despacio y acelera sola hasta esta velocidad.
+const RAMP_TARGET_ROUNDS = 1000;
+const RAMP_DURATION_MS = 15000;
+const RAMP_STEP_MS = 100;
 const TOUCH_TOOLTIP_MS = 3000;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const smoothing = () => (reducedMotion.matches ? 1 : 0.1);
@@ -35,6 +42,9 @@ let cols = GRID_LONG;
 let rows = GRID_SHORT;
 let selectedIndex = -1; // Casilla elegida con el teclado
 let tooltipTimer = null;
+let rampElapsed = 0;
+let rampTimer = null;
+let resumeAfterInfo = false;
 
 // DOM Elements
 const canvas = document.getElementById("gameCanvas");
@@ -44,7 +54,12 @@ const resetBtn = document.getElementById("resetBtn");
 const statsBtn = document.getElementById("statsBtn");
 const speedSlider = document.getElementById("speedSlider");
 const matchCountEl = document.getElementById("matchCount");
-const totalMoneyEl = document.getElementById("totalMoney");
+const bankResultEl = document.getElementById("bankResult");
+const bankArrowEl = document.getElementById("bankArrow");
+const bankValueEl = document.getElementById("bankValue");
+const infoBtn = document.getElementById("infoBtn");
+const infoDialog = document.getElementById("infoDialog");
+const infoClose = document.getElementById("infoClose");
 const tooltip = document.getElementById("tooltip");
 const iconPlay = document.getElementById("icon-play");
 const iconPause = document.getElementById("icon-pause");
@@ -159,6 +174,7 @@ function toggleGame() {
 }
 
 function resetGame() {
+  stopRamp();
   setPlaying(false);
   engine.post({ type: "RESET" });
   // Fuerza a reiniciar la animación con la próxima actualización.
@@ -168,7 +184,7 @@ function resetGame() {
 function updateStats() {
   matchCountEl.textContent = matchCount.toLocaleString();
   const stats = MonosSim.calculateStats(banks);
-  totalMoneyEl.textContent = stats.totalMoney.toLocaleString() + "€";
+  updateBank(banks.length * MonosSim.DEFAULTS.initialBank - stats.totalMoney);
 
   const total = banks.length || 1;
   for (const key of STAT_KEYS) {
@@ -178,6 +194,56 @@ function updateStats() {
   for (const key of BAR_KEYS) {
     pbEls[key].style.width = (stats[key] / total) * 100 + "%";
   }
+}
+
+// La banca gana lo que los monos pierden en conjunto, y al revés.
+function updateBank(result) {
+  const amount = Math.abs(result).toLocaleString() + " €";
+  const state = result > 0 ? "up" : result < 0 ? "down" : "even";
+  bankResultEl.classList.toggle("is-up", state === "up");
+  bankResultEl.classList.toggle("is-down", state === "down");
+  bankResultEl.classList.toggle("is-even", state === "even");
+  bankArrowEl.textContent = { up: "▲", down: "▼", even: "–" }[state];
+  bankValueEl.textContent = { up: "+", down: "−", even: "" }[state] + amount;
+  bankResultEl.setAttribute(
+    "aria-label",
+    { up: `Banca gana ${amount}`, down: `Banca pierde ${amount}`, even: "Banca en tablas" }[state],
+  );
+}
+
+function setSpeed(rounds) {
+  speedSlider.value = roundsToSlider(rounds);
+  engine.post({ type: "SPEED", value: rounds });
+  speedSlider.setAttribute(
+    "aria-valuetext",
+    rounds === 1 ? "1 ronda por paso" : `${rounds.toLocaleString()} rondas por paso`,
+  );
+}
+
+// Aceleración exponencial de 1 a RAMP_TARGET_ROUNDS; solo avanza mientras
+// se juega y se detiene en cuanto el usuario toca la velocidad.
+function startRamp() {
+  rampElapsed = 0;
+  setSpeed(1);
+  clearInterval(rampTimer);
+  rampTimer = setInterval(() => {
+    if (!isPlaying) return;
+    rampElapsed += RAMP_STEP_MS;
+    const progress = Math.min(1, rampElapsed / RAMP_DURATION_MS);
+    setSpeed(Math.max(1, Math.round(RAMP_TARGET_ROUNDS ** progress)));
+    if (progress === 1) stopRamp();
+  }, RAMP_STEP_MS);
+}
+
+function stopRamp() {
+  clearInterval(rampTimer);
+  rampTimer = null;
+}
+
+function openInfo() {
+  resumeAfterInfo = isPlaying;
+  if (isPlaying) toggleGame();
+  infoDialog.showModal();
 }
 
 // Render loop: interpola el color y solo repinta si algo ha cambiado.
@@ -408,11 +474,19 @@ canvas.addEventListener("blur", () => {
 playPauseBtn.addEventListener("click", toggleGame);
 resetBtn.addEventListener("click", resetGame);
 speedSlider.addEventListener("input", (e) => {
-  engine.post({ type: "SPEED", value: e.target.value });
-  speedSlider.setAttribute(
-    "aria-valuetext",
-    `${Number(e.target.value).toLocaleString()} rondas por paso`,
-  );
+  stopRamp();
+  setSpeed(sliderToRounds(Number(e.target.value)));
+});
+infoBtn.addEventListener("click", openInfo);
+infoClose.addEventListener("click", () => infoDialog.close());
+// Al cerrar la información (botón, Escape o fuera), se sigue jugando si se estaba.
+infoDialog.addEventListener("close", () => {
+  if (resumeAfterInfo && !isPlaying) toggleGame();
+  resumeAfterInfo = false;
+  infoBtn.focus();
+});
+infoDialog.addEventListener("click", (e) => {
+  if (e.target === infoDialog) infoDialog.close();
 });
 statsBtn.addEventListener("click", () => {
   if (isPlaying) toggleGame();
@@ -422,9 +496,10 @@ statsBtn.addEventListener("click", () => {
 addEventListener("resize", resizeCanvas);
 addEventListener("scroll", updateCanvasRect, { passive: true });
 
-// Init
-engine.post({ type: "SPEED", value: speedSlider.value });
+// Init: arranca sola, despacio, y va acelerando.
 engine.post({ type: "INIT" });
+startRamp();
+toggleGame();
 resizeCanvas();
 setTimeout(resizeCanvas, 50);
 requestAnimationFrame(renderLoop);

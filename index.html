@@ -15,27 +15,32 @@
     <header>
       <h1>Battle Royale</h1>
       <div class="controls">
-        <span
-          class="money-counter"
-          id="totalMoney"
-          title="Dinero total en juego"
-          aria-label="Dinero total en juego"
-          >0€</span
-        >
+        <span class="bank-counter is-even" id="bankResult" title="Lo que gana o pierde la banca">
+          <span class="bank-label">Banca</span>
+          <span class="bank-arrow" id="bankArrow" aria-hidden="true">–</span>
+          <span id="bankValue">0 €</span>
+        </span>
         <div class="slider-container">
           <input
             type="range"
             id="speedSlider"
-            min="100"
-            max="10000"
-            step="100"
-            value="1000"
+            min="0"
+            max="100"
+            step="1"
+            value="0"
             aria-label="Velocidad de simulación"
-            aria-valuetext="1000 rondas por paso"
+            aria-valuetext="1 ronda por paso"
             title="Velocidad de simulación"
           />
         </div>
         <div class="btn-group">
+          <button id="infoBtn" type="button" aria-label="De qué va el juego" title="De qué va el juego">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+              />
+            </svg>
+          </button>
           <button id="playPauseBtn" type="button" aria-label="Iniciar" title="Iniciar">
             <svg id="icon-play" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M8 5v14l11-7z" />
@@ -70,6 +75,39 @@
       <div id="tooltip" aria-hidden="true"></div>
       <p id="playerInfo" class="visually-hidden" aria-live="polite"></p>
     </main>
+
+    <dialog id="infoDialog" aria-labelledby="infoTitle">
+      <div class="info-body">
+      <div class="info-header">
+        <h2 id="infoTitle">¿De qué va?</h2>
+        <button id="infoClose" type="button" aria-label="Cerrar" title="Cerrar">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+            />
+          </svg>
+        </button>
+      </div>
+      <ul class="info-list">
+        <li><span class="info-icon" aria-hidden="true">🐒</span><span>1000 monos empiezan con 1000 € cada uno.</span></li>
+        <li><span class="info-icon" aria-hidden="true">🪙</span><span>En cada ronda apuestan 1 € a cara o cruz contra la banca: 50 % de ganar.</span></li>
+        <li><span class="info-icon" aria-hidden="true">💀</span><span>El que llega a 0 € queda eliminado para siempre.</span></li>
+        <li><span class="info-icon" aria-hidden="true">🏦</span><span>Banca: <span class="bank-up">▲ verde</span> si gana, <span class="bank-down">▼ roja</span> si pierde.</span></li>
+        <li><span class="info-icon" aria-hidden="true">📉</span><span>Aunque el juego es justo, con el tiempo casi todos se arruinan y unos pocos se quedan el dinero.</span></li>
+      </ul>
+      <ul class="info-legend" aria-label="Colores">
+        <li><span class="dot dot-ruined" aria-hidden="true"></span>0 €</li>
+        <li><span class="dot dot-losing" aria-hidden="true"></span>&lt;900</li>
+        <li><span class="dot dot-neutral" aria-hidden="true"></span>≈1000</li>
+        <li><span class="dot dot-winning" aria-hidden="true"></span>&gt;1100</li>
+        <li><span class="dot dot-x2" aria-hidden="true"></span>x2</li>
+        <li><span class="dot dot-x3" aria-hidden="true"></span>x3</li>
+        <li><span class="dot dot-x5" aria-hidden="true"></span>x5</li>
+        <li><span class="dot dot-x10" aria-hidden="true"></span>x10</li>
+      </ul>
+      <p class="info-controls">▶ jugar · ↺ reiniciar · 📊 seguimiento · deslizador: velocidad</p>
+      </div>
+    </dialog>
 
     <!-- Seguimiento encima del juego, para no perder la partida al volver -->
     <div
