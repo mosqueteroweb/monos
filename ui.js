@@ -1,6 +1,6 @@
 // Colores por categoría, en el orden de MonosSim.COLOR.
 const PALETTE = [
-  "#607d8b", // Arruinado (gris: el negro no se distingue del fondo)
+  "#000000", // Arruinado: se ve como un hueco en la cuadrícula
   "#ff9800", // Perdiendo (<900)
   "#ffeb3b", // Neutro (900-1100)
   "#4caf50", // Ganando (>1100)
@@ -10,8 +10,8 @@ const PALETTE = [
   "#ff00ff", // x10
 ];
 
-const GRID_LONG = 40;
-const GRID_SHORT = 25;
+const RATE_INTERVAL_MS = 1000;
+const compactNumber = new Intl.NumberFormat("es", { notation: "compact", maximumFractionDigits: 1 });
 const STATS_INTERVAL_MS = 66;
 // Velocidad: el deslizador (0-100) es logarítmico, de 1 a 10 000 rondas por paso.
 const sliderToRounds = (value) => Math.round(10 ** (value / 25));
@@ -36,15 +36,16 @@ let lastStatsTime = 0;
 let cssWidth = 0;
 let cssHeight = 0;
 let canvasRect = null;
-// 40×25 en horizontal y 25×40 en vertical, para que las casillas no salgan
-// finísimas en un móvil.
-let cols = GRID_LONG;
-let rows = GRID_SHORT;
+// Columnas × filas: se elige la forma con casillas más cuadradas para el
+// tamaño de pantalla (40×25 en escritorio, 25×40 en un móvil vertical…).
+let cols = 40;
+let rows = 25;
 let selectedIndex = -1; // Casilla elegida con el teclado
 let tooltipTimer = null;
 let rampElapsed = 0;
 let rampTimer = null;
 let resumeAfterInfo = false;
+let rateSample = { time: performance.now(), count: 0 };
 
 // DOM Elements
 const canvas = document.getElementById("gameCanvas");
@@ -60,6 +61,7 @@ const bankValueEl = document.getElementById("bankValue");
 const infoBtn = document.getElementById("infoBtn");
 const infoDialog = document.getElementById("infoDialog");
 const infoClose = document.getElementById("infoClose");
+const roundRateEl = document.getElementById("roundRate");
 const tooltip = document.getElementById("tooltip");
 const iconPlay = document.getElementById("icon-play");
 const iconPause = document.getElementById("icon-pause");
@@ -176,6 +178,7 @@ function toggleGame() {
 function resetGame() {
   stopRamp();
   setPlaying(false);
+  rateSample = { time: performance.now(), count: 0 };
   engine.post({ type: "RESET" });
   // Fuerza a reiniciar la animación con la próxima actualización.
   banks = new Int32Array(0);
@@ -303,6 +306,35 @@ function draw() {
   }
 }
 
+// De las formas que llenan la cuadrícula exacta (sin huecos que parezcan
+// arruinados), la que deja las casillas más cuadradas.
+function bestGrid(count, width, height) {
+  let best = [count, 1];
+  let bestScore = Infinity;
+  for (let c = 1; c <= count; c++) {
+    if (count % c !== 0) continue;
+    const r = count / c;
+    const score = Math.abs(Math.log(width / c / (height / r)));
+    if (score < bestScore) {
+      bestScore = score;
+      best = [c, r];
+    }
+  }
+  return best;
+}
+
+// Rondas por segundo, medidas sobre el último segundo.
+function updateRoundRate() {
+  const now = performance.now();
+  const rate = ((matchCount - rateSample.count) * 1000) / (now - rateSample.time);
+  rateSample = { time: now, count: matchCount };
+  if (!isPlaying || rate <= 0) {
+    roundRateEl.textContent = "en pausa";
+    return;
+  }
+  roundRateEl.textContent = `⚡ ${compactNumber.format(Math.round(rate))} rondas/s`;
+}
+
 function updateCanvasRect() {
   canvasRect = canvas.getBoundingClientRect();
 }
@@ -318,10 +350,7 @@ function resizeCanvas() {
     canvas.style.width = cssWidth + "px";
     canvas.style.height = cssHeight + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Elige la orientación con casillas más cuadradas.
-    const landscape = cssWidth >= cssHeight;
-    cols = landscape ? GRID_LONG : GRID_SHORT;
-    rows = landscape ? GRID_SHORT : GRID_LONG;
+    [cols, rows] = bestGrid(MonosSim.DEFAULTS.playerCount, cssWidth, cssHeight);
     needsRedraw = true;
   }
   updateCanvasRect();
@@ -503,3 +532,4 @@ toggleGame();
 resizeCanvas();
 setTimeout(resizeCanvas, 50);
 requestAnimationFrame(renderLoop);
+setInterval(updateRoundRate, RATE_INTERVAL_MS);
