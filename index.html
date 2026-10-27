@@ -15,12 +15,6 @@
     <header>
       <h1>
         BATTLE ROYALE
-        <a
-          href="webworker.html"
-          class="worker-link"
-          title="Versión con Web Worker para mejor rendimiento"
-          >Versión Worker →</a
-        >
       </h1>
       <div class="controls">
         <span class="money-counter" id="totalMoney">0€</span>
@@ -91,49 +85,49 @@
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-losing"></span>Perdiendo (<900)<span
+          <span class="dot dot-losing"></span>Perdiendo (&lt;900)<span
             class="stat-value"
             id="stat-losing"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-neutral"></span>Neutro (900-1100)<span
+          <span class="dot dot-neutral"></span>Neutro (900–1100)<span
             class="stat-value"
             id="stat-neutral"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-winning"></span>Ganando (>1100)<span
+          <span class="dot dot-winning"></span>Ganando (&gt;1100)<span
             class="stat-value"
             id="stat-winning"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-x2"></span>x2 (>2k)<span
+          <span class="dot dot-x2"></span>x2 (≥2k)<span
             class="stat-value"
             id="stat-x2"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-x3"></span>x3 (>3k)<span
+          <span class="dot dot-x3"></span>x3 (≥3k)<span
             class="stat-value"
             id="stat-x3"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-x5"></span>x5 (>5k)<span
+          <span class="dot dot-x5"></span>x5 (≥5k)<span
             class="stat-value"
             id="stat-x5"
             >0 (0%)</span
           >
         </div>
         <div class="stat-item">
-          <span class="dot dot-x10"></span>x10 (>10k)<span
+          <span class="dot dot-x10"></span>x10 (≥10k)<span
             class="stat-value"
             id="stat-x10"
             >0 (0%)</span
@@ -142,6 +136,7 @@
       </div>
     </div>
 
-    <script src="game.js" defer></script>
+    <script src="sim.js"></script>
+    <script src="ui.js"></script>
   </body>
 </html>

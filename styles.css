@@ -45,21 +45,6 @@ h1 {
   gap: 10px;
 }
 
-.worker-link {
-  font-size: 0.8rem;
-  text-decoration: none;
-  color: var(--accent-color);
-  border: 1px solid var(--accent-color);
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.worker-link:hover {
-  background: var(--accent-color);
-  color: #000;
-}
-
 .controls {
   display: flex;
   align-items: center;
@@ -319,20 +304,4 @@ main {
   .stats-grid {
     grid-template-columns: 1fr 1fr;
   }
-}
-
-/* Extracted from webworker.html */
-.back-link {
-  font-size: 0.8rem;
-  text-decoration: none;
-  color: var(--text-secondary);
-  border: 1px solid #444;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.back-link:hover {
-  color: var(--text-primary);
-  border-color: var(--text-primary);
 }

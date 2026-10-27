@@ -1,47 +1,32 @@
 const backBtn = document.getElementById("backBtn");
-const ctx = document.getElementById("trackingChart").getContext("2d");
-
-// Navigation
-const urlParams = new URLSearchParams(location.search);
-const fromPage = urlParams.get("from");
+const chartWrapper = document.querySelector(".chart-wrapper");
 
 backBtn.addEventListener("click", () => {
-  if (fromPage === "webworker.html") {
-    location.href = "webworker.html";
-  } else {
-    location.href = "index.html";
-  }
+  location.href = "index.html";
 });
 
-// Load Data
-const rawData = localStorage.getItem("seguimientoData");
+function showMessage(html) {
+  chartWrapper.innerHTML = `<div class="no-data">${html}</div>`;
+}
 
-if (!rawData) {
-  document.querySelector(".chart-wrapper").innerHTML =
-    '<div class="no-data">No hay datos de seguimiento disponibles.<br>Juega una partida primero.</div>';
-} else {
-  const data = JSON.parse(rawData);
-  const history = data.history; // { id: [val1, val2...], ... }
-  const ids = data.ids;
-  // The number of labels should match the longest history
-  // However, all tracked players should have roughly the same history length
-  // (give or take 1 if game ended mid-loop, but likely identical)
-
-  const maxLength = Math.max(
-    ...Object.values(history).map((arr) => arr.length),
-  );
-
-  // Sampling for performance if too many points
-  // Chart.js can handle a lot, but 100k might be sluggish on mobile.
-  // Let's sample down to ~2000 points max for display.
-  const sampleRate = Math.max(1, Math.floor(maxLength / 2000));
-
-  const labels = [];
-  for (let i = 0; i < maxLength; i += sampleRate) {
-    labels.push(i);
+function loadData() {
+  try {
+    const data = JSON.parse(localStorage.getItem("seguimientoData"));
+    // Formato actual: { ids, points, history }. Los datos antiguos no traen points.
+    if (data && Array.isArray(data.points) && data.history) return data;
+  } catch (e) {
+    Logger.error("Error reading tracking data:", e);
   }
+  return null;
+}
 
-  const datasets = [];
+const data = loadData();
+
+if (!data) {
+  showMessage("No hay datos de seguimiento disponibles.<br>Juega una partida primero.");
+} else if (typeof Chart === "undefined") {
+  showMessage("No se pudo cargar la librería de gráficos.<br>Comprueba la conexión a internet.");
+} else {
   const colors = [
     "#00ffff", // Cyan
     "#ff9800", // Orange
@@ -49,33 +34,24 @@ if (!rawData) {
     "#00e676", // Green
   ];
 
-  ids.forEach((id, index) => {
-    const playerHistory = history[id];
-    const sampledData = [];
-    for (let i = 0; i < playerHistory.length; i += sampleRate) {
-      sampledData.push(playerHistory[i]);
-    }
+  const datasets = data.ids.map((id, index) => ({
+    label: "Jugador " + id,
+    data: data.history[id],
+    borderColor: colors[index % colors.length],
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    pointRadius: 0, // Hide points for cleaner line
+    tension: 0.1,
+  }));
 
-    datasets.push({
-      label: "Jugador " + id,
-      data: sampledData,
-      borderColor: colors[index % colors.length],
-      backgroundColor: "transparent",
-      borderWidth: 2,
-      pointRadius: 0, // Hide points for cleaner line
-      tension: 0.1,
-    });
-  });
-
-  // Initialize Chart
   Chart.defaults.color = "#a0a0a0";
   Chart.defaults.borderColor = "#333";
 
-  new Chart(ctx, {
+  new Chart(document.getElementById("trackingChart").getContext("2d"), {
     type: "line",
     data: {
-      labels: labels,
-      datasets: datasets,
+      labels: data.points.map((round) => round.toLocaleString()),
+      datasets,
     },
     options: {
       responsive: true,

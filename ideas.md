@@ -27,7 +27,6 @@ Este documento recopila la evolución de las ideas y decisiones técnicas para l
 - **Equipo Cara (0-499):** Gana si sale Cara.
 - **Equipo Cruz (500-999):** Gana si sale Cruz.
 - **Apuesta:** **1€** por tirada (Cambio solicitado: de 10€ a 1€).
-- **Apuesta:** **1€** por tirada (Cambio solicitado: de 10€ a 1€).
 - **Resultados:** Correlación total. Creación de "mareas" de ganadores y perdedores.
 
 ### Fase D: "Elección Aleatoria vs Moneda Única" (Lógica Solicitada)
@@ -60,6 +59,15 @@ Códigos de color según la banca del jugador:
 
 ## 5. Optimizaciones
 - **Frecuencia de Actualización**: Para acelerar la simulación y evitar parpadeos molestos, el bucle principal ejecuta **1000 partidas (matches)** en memoria antes de actualizar el gráfico y el contador una sola vez. Esto permite simular millones de partidas en cuestión de minutos.
+
+### Revisión de rendimiento (octubre 2026)
+- **Simulación compartida**: toda la lógica vive en `sim.js`, que usan el Web Worker, el modo sin Worker y los tests.
+- **Un bit por apuesta**: como cada agente elige al azar, acertar es un 50/50 independiente; no hace falta lanzar la moneda ni comparar.
+- **32 apuestas por número aleatorio**: se piden palabras de 32 bits a `crypto.getRandomValues` en lotes de 64 KB.
+- **Arrays tipados y lista de activos**: la banca está en un `Int32Array` y los arruinados salen de la lista, así que no se recorren.
+- **Sin saltos impredecibles**: la apuesta suma +1 o -1 sin `if`.
+- **Dibujo por color**: una pasada por cada color y solo se repinta si algo cambia.
+- **Historial muestreado**: unos 2000 puntos que cubren la partida entera (antes, solo las primeras 100 000 rondas).
 
 ## 6. Mejoras de Datos
 - **Registro de Bancarrota**: Se guarda el número de la ronda (match) exacta en la que un jugador pierde todo su dinero.
